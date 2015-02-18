@@ -21,17 +21,17 @@ using System.Diagnostics;
 
 namespace Healthstone
 {
-	public class Program : System.ServiceProcess.ServiceBase
+	public class Program : System.ServiceProcess.ServiceBase // Inherit Services
 	{
 		static Timer hstimer;
 		public Dictionary<string, string> cfg;
 
-		public Program()
+		public Program() // Setting service name
         {
             this.ServiceName = "Healthstone";
         }
 		
-		static void Main(string[] args)
+		static void Main(string[] args) // Required elements for a service program
 		{
 			Console.WriteLine("Healthstone System Monitor - http://dendory.net");
 			ServiceBase[] servicesToRun;
@@ -39,38 +39,38 @@ namespace Healthstone
 			ServiceBase.Run(servicesToRun);
 		}
   
-		protected override void OnStart(string[] args)
+		protected override void OnStart(string[] args) // Starting service
 		{
 			cfg = new Dictionary<string, string>();
 			string line;
 			string[] values;
-			char[] delimiterChars = { '=', ':', '\t' };
+			char[] delimiterChars = { '=', ':', '\t' }; // Characters available to split keys and values in .cfg file
 			System.IO.StreamReader cfgfile = new System.IO.StreamReader(Environment.ExpandEnvironmentVariables("%SYSTEMROOT%") + "\\healthstone\\healthstone.cfg");
 			while((line = cfgfile.ReadLine()) != null)
 			{
-				if(line.Length > 0 && line.Trim()[0] != '#')
+				if(line.Length > 0 && line.Trim()[0] != '#') // Avoid empty lines and comments
 				{
 					values = line.Trim().Split(delimiterChars);
-					if(values.Length == 2) { cfg.Add(values[0].Trim(), values[1].Trim()); }
+					if(values.Length == 2) { cfg.Add(values[0].Trim(), values[1].Trim()); } // Assign key:value pairs to our cfg dictionary
 				}
 			}
 			cfgfile.Close();
-			if(Int32.Parse(cfg["Interval"]) < 10)
+			if(Int32.Parse(cfg["Interval"]) < 10) // Since this may take a few seconds to run, disallow running it more than once every 10 secs
 			{
 				EventLog.WriteEntry("Healthstone", "Configuration error: Invalid interval value (must be above 10 seconds)", EventLogEntryType.Error);
 				base.Stop();
 			}
-			hstimer = new Timer(Int32.Parse(cfg["Interval"]) * 1000);
-			hstimer.Elapsed += new System.Timers.ElapsedEventHandler(DoChecks);
+			hstimer = new Timer(Int32.Parse(cfg["Interval"]) * 1000); // Set a timer for the value in Interval
+			hstimer.Elapsed += new System.Timers.ElapsedEventHandler(DoChecks); // Call DoChecks after the timer is up
 			hstimer.Start();
 		}
 
-		protected override void OnStop()
+		protected override void OnStop() // Stopping the service
 		{
 			hstimer.Stop();
 		}
 		
-		private string DateToString(string s)
+		private string DateToString(string s) // Convert .NET WMI date to DateTime and return as a string
 		{
 			int year = int.Parse(s.Substring(0, 4));
 			int month = int.Parse(s.Substring(4, 2));
@@ -82,7 +82,7 @@ namespace Healthstone
 			return date.ToString();
 		}
 
-		private Int32 DateToHours(string s)
+		private Int32 DateToHours(string s) // Convert .NET WMI date to DateTime then return number of hours between now and then
 		{
 			int year = int.Parse(s.Substring(0, 4));
 			int month = int.Parse(s.Substring(4, 2));
@@ -100,7 +100,7 @@ namespace Healthstone
 			hstimer.Stop();
 			
 			// Headers
-			string output = "Healthstone checks: " + Environment.MachineName;
+			string output = "Healthstone checks: " + Environment.MachineName; // The output string contains the results from all checks
 			bool alarms = false;
 			ManagementObjectSearcher wmi;
 			
@@ -208,12 +208,12 @@ namespace Healthstone
 					}
 					if(string.Compare(cfg["CheckAntiVirusState"], "false") != 0)
 					{
-						if(Int32.Parse(items["productState"].ToString()).ToString("X6")[2] == '0')
+						if(Int32.Parse(items["productState"].ToString()).ToString("X6")[2] == '0') // This bit is for disabled
 						{
 							output +=  "Anti Virus " + items["displayName"] + " is disabled.\n";
 							alarms = true;
 						}
-						if(Int32.Parse(items["productState"].ToString()).ToString("X6")[4] == '1')
+						if(Int32.Parse(items["productState"].ToString()).ToString("X6")[4] == '1') // This bit is for out of date
 						{
 							output +=  "Anti Virus " + items["displayName"] + " is out of date.\n";
 							alarms = true;

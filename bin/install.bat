@@ -14,3 +14,5 @@ copy healthstone.exe %SYSTEMROOT%\healthstone\healthstone.exe
 %SYSTEMROOT%\System32\sc.exe create Healthstone binpath= %SYSTEMROOT%\healthstone\healthstone.exe type= own start= auto
 %SYSTEMROOT%\System32\sc.exe description Healthstone "Healhstone System Monitor"
 net start Healthstone
+echo Done.
+pause
