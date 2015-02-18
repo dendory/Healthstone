@@ -8,5 +8,6 @@ copy ..\bin\healthstone.cfg %SYSTEMROOT%\healthstone\healthstone.cfg
 copy ..\bin\healthstone.exe %SYSTEMROOT%\healthstone\healthstone.exe
 %SYSTEMROOT%\System32\sc.exe create Healthstone binpath= %SYSTEMROOT%\healthstone\healthstone.exe type= own start= auto
 %SYSTEMROOT%\System32\sc.exe description Healthstone "Healhstone System Monitor"
+reg add HKLM\Software\Healthstone /v Config /t REG_SZ /d "%SYSTEMROOT%\healthstone\healthstone.cfg" /f
 net start Healthstone
 :end

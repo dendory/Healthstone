@@ -14,6 +14,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Timers;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2015 Patrick Lambert")]
@@ -45,11 +46,14 @@ namespace Healthstone
 			string line;
 			string[] values;
 			char[] delimiterChars = { '=', ':', '\t' }; // Characters available to split keys and values in .cfg file
-			System.IO.StreamReader cfgfile = new System.IO.StreamReader(Environment.ExpandEnvironmentVariables("%SYSTEMROOT%") + "\\healthstone\\healthstone.cfg");
+			RegistryKey rkey = Registry.LocalMachine.OpenSubKey("Software\\Healthstone");
+			System.IO.StreamReader cfgfile = new System.IO.StreamReader((string)rkey.GetValue("Config"));
 			while((line = cfgfile.ReadLine()) != null)
 			{
 				if(line.Length > 0 && line.Trim()[0] != '#') // Avoid empty lines and comments
 				{
+					int index = line.LastIndexOf('#');
+					if(index > 0) line = line.Substring(0, index);   // Catch same-line comments
 					values = line.Trim().Split(delimiterChars);
 					if(values.Length == 2) { cfg.Add(values[0].Trim(), values[1].Trim()); } // Assign key:value pairs to our cfg dictionary
 				}
