@@ -15,7 +15,11 @@ using System.Management;
 using System.ServiceProcess;
 using System.Timers;
 using System.Diagnostics;
+using System.Threading;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Data.Odbc;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
@@ -26,12 +30,15 @@ namespace Healthstone
 {
 	public class Program : System.ServiceProcess.ServiceBase // Inherit Services
 	{
-		static Timer hstimer;
+		static System.Timers.Timer hstimer;
 		public Dictionary<string, string> cfg;
 		public string output;
 		public bool alarms;
 		public WebClient wc;
 		public ManagementObjectSearcher wmi;
+		public RegistryKey rkey;
+		public PerformanceCounter cpu;
+		public int port;
 		
 		public Program() // Setting service name
         {
@@ -50,7 +57,7 @@ namespace Healthstone
 		{
 			cfg = new Dictionary<string, string>();
 			string line;
-			RegistryKey rkey = Registry.LocalMachine.OpenSubKey("Software\\Healthstone");
+			rkey = Registry.LocalMachine.OpenSubKey("Software\\Healthstone");
 			System.IO.StreamReader cfgfile = new System.IO.StreamReader((string)rkey.GetValue("Config"));
 			while((line = cfgfile.ReadLine()) != null)
 			{
@@ -69,7 +76,7 @@ namespace Healthstone
 				EventLog.WriteEntry("Healthstone", "Configuration error: Invalid interval value (must be above 10 seconds)", EventLogEntryType.Error);
 				base.Stop();
 			}
-			hstimer = new Timer(Int32.Parse(cfg["Interval"]) * 1000); // Set a timer for the value in Interval
+			hstimer = new System.Timers.Timer(Int32.Parse(cfg["Interval"]) * 1000); // Set a timer for the value in Interval
 			hstimer.Elapsed += new System.Timers.ElapsedEventHandler(DoChecks); // Call DoChecks after the timer is up
 			hstimer.Start();
 		}
@@ -152,30 +159,34 @@ namespace Healthstone
 							output +=  "Data Execution Protection (DEP) is set to OFF.\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "DEP: " +  items["DataExecutionPrevention_SupportPolicy"] + "\n"; }
 					}
 					if(CfgValue("CheckTimeZone"))
 					{
 						if((Int32.Parse(items["CurrentTimeZone"].ToString()) / 60) != Int32.Parse(cfg["CheckTimeZone"]))
 						{
-							output += "Wrong time zone set. Expected " + cfg["CheckTimeZone"] + " but got " + (Int32.Parse(items["CurrentTimeZone"].ToString()) / 60) + ".\n";
+							output += "Wrong time zone: Expected " + cfg["CheckTimeZone"] + " but got " + (Int32.Parse(items["CurrentTimeZone"].ToString()) / 60) + ".\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "Time zone: " +  (Int32.Parse(items["CurrentTimeZone"].ToString()) / 60) + "\n"; }
 					}
 					if(CfgValue("CheckCodePage"))
 					{
 						if(Int32.Parse(items["CodeSet"].ToString()) != Int32.Parse(cfg["CheckCodePage"]))
 						{
-							output += "Wrong code page set. Expected " + cfg["CheckCodePage"] + " but got " + Int32.Parse(items["CodeSet"].ToString()) + ".\n";
+							output += "Wrong code page: Expected " + cfg["CheckCodePage"] + " but got " + Int32.Parse(items["CodeSet"].ToString()) + ".\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "Code page: " +  items["CodeSet"] + "\n"; }
 					}
 					if(CfgValue("CheckLocale"))
 					{
 						if(string.Compare(items["Locale"].ToString(), cfg["CheckLocale"]) != 0)
 						{
-							output += "Wrong locale set. Expected " + cfg["CheckLocale"] + " but got " + items["Locale"] + ".\n";
+							output += "Wrong locale: Expected " + cfg["CheckLocale"] + " but got " + items["Locale"] + ".\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "Locale: " +  items["Locale"] + "\n"; }
 					}
 					if(CfgValue("CheckFreeMemory"))
 					{
@@ -184,6 +195,7 @@ namespace Healthstone
 							output += "Low physical memory: " + (Int32.Parse(items["FreePhysicalMemory"].ToString()) / 1000) + " MB.\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "Free physical memory: " + (Int32.Parse(items["FreePhysicalMemory"].ToString()) / 1000) + " MB.\n"; }
 					}
 					if(CfgValue("CheckLastBoot"))
 					{
@@ -192,6 +204,7 @@ namespace Healthstone
 							output += "System last rebooted on: " + DateToString(items["LastBootUpTime"].ToString()) + ".\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "Last reboot time: " + DateToString(items["LastBootUpTime"].ToString()) + "\n"; }
 					}
 					if(CfgValue("CheckSystemStatus"))
 					{
@@ -200,6 +213,7 @@ namespace Healthstone
 							output +=  "System status set to: " + items["Status"] + ".\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "System status: " +  items["Status"] + "\n"; }
 					}
 					if(CfgValue("CheckProcessCount"))
 					{
@@ -208,6 +222,7 @@ namespace Healthstone
 							output += "There are " + items["NumberOfProcesses"] + " processes running.\n";
 							alarms = true;
 						}
+						else if(CfgValue("Verbose")) { output += "Number of processes: " +  items["NumberOfProcesses"] + "\n"; }
 					}
 				}
 			}
@@ -215,7 +230,125 @@ namespace Healthstone
 			{
 				if(CfgValue("RaiseQueryFailures"))
 				{
-					output += "WMI Query failure: " + e;
+					output += "Windows checks: WMI Query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // Check boot state, host name, domain name
+			{
+				wmi = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_ComputerSystem");
+				foreach(ManagementObject items in wmi.Get())
+				{
+					if(CfgValue("CheckBootState"))
+					{
+						if(string.Compare(items["BootupState"].ToString(), "Normal boot") != 0)
+						{
+							output +=  "Abnormal boot state: " + items["BootupState"] + "\n";
+							alarms = true;
+						}
+						else if(CfgValue("Verbose")) { output += "Boot state: " +  items["BootupState"] + "\n"; }
+					}
+					if(CfgValue("CheckHostName"))
+					{
+						if(string.Compare(items["DNSHostName"].ToString(), cfg["CheckHostName"]) != 0)
+						{
+							output +=  "Wrong hostname: Expected " + cfg["CheckHostName"] + " but got " + items["DNSHostName"] + "\n";
+							alarms = true;
+						}
+						else if(CfgValue("Verbose")) { output += "Hostname: " +  items["DNSHostName"] + "\n"; }
+					}
+					if(CfgValue("CheckDomainName"))
+					{
+						if(string.Compare(items["Domain"].ToString(), cfg["CheckDomainName"]) != 0)
+						{
+							output +=  "Wrong domain: Expected " + cfg["CheckDomainName"] + " but got " + items["Domain"] + "\n";
+							alarms = true;
+						}
+						else if(CfgValue("Verbose")) { output += "Domain name: " +  items["Domain"] + "\n"; }
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Computer checks: WMI Query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // Check disk space
+			{
+				if(CfgValue("CheckDiskSpace"))
+				{
+					wmi = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_LogicalDisk");
+					foreach(ManagementObject items in wmi.Get())
+					{
+						if(items["FreeSpace"] != null)
+						{
+							ulong freespace = (ulong)items["FreeSpace"] / 1000000;
+							if(freespace < UInt64.Parse(cfg["CheckDiskSpace"]) && freespace > 0)
+							{
+								output +=  "Low disk space on drive " + items["Caption"] + " " + freespace + " MB\n";
+								alarms = true;
+							}
+							else if(CfgValue("Verbose")) { output += "Disk space on drive " + items["Caption"] + " " + freespace + " MB\n"; }
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Disk checks: WMI Query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			// Check ports
+			if(CfgValue("CheckCustomPort")) 
+			{
+				TcpClient tcp = new TcpClient();
+				foreach(string p in cfg["CheckCustomPort"].Split(' '))
+				{
+					try
+					{
+						port = Int32.Parse(p);
+						tcp.Connect("127.0.0.1", port);
+						tcp.Close();
+						if(CfgValue("Verbose")) { output += "Port " + port + " is open.\n"; }
+					}
+					catch (Exception)
+					{
+						output += "Port " + port + " is closed.\n";
+						alarms = true;				
+					}
+				}
+			}
+			
+			try // Check temperature
+			{
+				wmi = new ManagementObjectSearcher("root\\WMI", "SELECT * FROM MSAcpi_ThermalZoneTemperature");
+				foreach(ManagementObject items in wmi.Get())
+				{
+					if(CfgValue("CheckTemperature"))
+					{
+						if((((double)items["CurrentTemperature"]  - 2732) / 10) > Convert.ToDouble(cfg["CheckTemperature"]))
+						{
+							output +=  "High system temperature: " + (((double)items["CurrentTemperature"]  - 2732) / 10) + " C\n";
+							alarms = true;
+						}
+						else if(CfgValue("Verbose")) { output += "System temperature: " +  (((double)items["CurrentTemperature"]  - 2732) / 10) + " C\n"; }
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Temperature checks: WMI Query failure: " + e + "\n";
 					alarms = true;				
 				}
 			}
@@ -252,16 +385,202 @@ namespace Healthstone
 			{
 				if(CfgValue("RaiseQueryFailures"))
 				{
-					output += "WMI Query failure: " + e;
+					output += "Anti Virus checks: WMI Query failure: " + e + "\n";
 					alarms = true;				
 				}
 			}
 
+			try // Check firewall
+			{
+				if(CfgValue("CheckFirewallPublic"))
+				{
+					rkey = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\PublicProfile");
+					if((int)rkey.GetValue("EnableFirewall") != 1)
+					{
+						output += "Public firewall is OFF\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "Public firewall: " +  rkey.GetValue("EnableFirewall") + "\n"; }
+				}
+				if(CfgValue("CheckFirewallPrivate"))
+				{
+					rkey = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile");
+					if((int)rkey.GetValue("EnableFirewall") != 1)
+					{
+						output += "Private firewall is OFF\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "Private firewall: " +  rkey.GetValue("EnableFirewall") + "\n"; }
+				}
+				if(CfgValue("CheckFirewallDomain"))
+				{
+					rkey = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile");
+					if((int)rkey.GetValue("EnableFirewall") != 1)
+					{
+						output += "Domain firewall is OFF\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "Domain firewall: " +  rkey.GetValue("EnableFirewall") + "\n"; }
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Firewall checks: Registry Query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // Check windows updates
+			{
+				if(CfgValue("CheckWULast"))
+				{
+					rkey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\Results\\Install");
+					if((DateTime.Now - Convert.ToDateTime((string)rkey.GetValue("LastSuccessTime"))).TotalHours > Int32.Parse(cfg["CheckWULast"]))
+					{
+						output += "Last Windows updates " + (int)(DateTime.Now - Convert.ToDateTime((string)rkey.GetValue("LastSuccessTime"))).TotalHours + " hours ago on " + rkey.GetValue("LastSuccessTime") + "\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "Last Windows update: " + rkey.GetValue("LastSuccessTime") + "\n"; }
+				}
+				if(CfgValue("CheckWUEnabled"))
+				{
+					rkey = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update");
+					if((int)rkey.GetValue("AUOptions") != 4)
+					{
+						output += "Windows Updates are not set to automatically install.\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "Windows Updates are set to " + rkey.GetValue("AUOptions") + "\n"; }
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Windows Update checks: Registry Query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+			
+			try // check cpu load
+			{
+				if(CfgValue("CheckCpuLoad"))
+				{
+					cpu = new PerformanceCounter();
+					cpu.CategoryName = "Processor";
+					cpu.CounterName = "% Processor Time";
+					cpu.InstanceName = "_Total";
+					float val1 = cpu.NextValue();
+					Thread.Sleep(500);
+					float val2 = cpu.NextValue();
+					Thread.Sleep(500);
+					float val3 = cpu.NextValue();					
+					float curval = Math.Max(val1, Math.Max(val2, val3));
+					if(curval > Int32.Parse(cfg["CheckCpuLoad"]))
+					{
+						output += "High CPU load: " + curval + "%\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "CPU load: " +  curval + "%\n"; }					
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "CPU checks: Performance Counter failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // check network connection
+			{
+				if(CfgValue("CheckNetConnectivity"))
+				{
+					Ping ping = new Ping();
+					PingReply reply = ping.Send(cfg["CheckNetConnectivity"], 2000);
+					if(reply.Status != IPStatus.Success)
+					{
+						output += "Network connectivity: " + cfg["CheckNetConnectivity"] + " is not reachable.\n";
+						alarms = true;
+					}
+					else if(CfgValue("CheckNetLatency"))
+					{
+						if(reply.RoundtripTime > Int32.Parse(cfg["CheckNetLatency"]))
+						{
+							output += "High network latency: " + reply.RoundtripTime + "ms.\n";
+							alarms = true;
+						}
+						else if(CfgValue("Verbose")) { output += "Network connectivity: " + cfg["CheckNetConnectivity"] + " is reachable (" + reply.RoundtripTime + "ms).\n"; }
+					}
+					else if(CfgValue("Verbose")) { output += "Network connectivity: " + cfg["CheckNetConnectivity"] + " is reachable.\n"; }
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Network checks: Network connectivity failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+			
+			try // check http request
+			{
+				if(CfgValue("CheckNetHttp"))
+				{
+					wc = new WebClient();
+					string result = wc.DownloadString(cfg["CheckNetHttp"]);
+					if(CfgValue("Verbose")) { output += "HTTP connectivity succeeded.\n"; }
+				}
+			}
+			catch (WebException e)
+			{
+				output += "HTTP connectivity failure: " + e.Message + "\n";
+				alarms = true;
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "HTTP checks: Network connectivity failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+			
+			try // check ODBC
+			{
+				if(CfgValue("CheckODBC"))
+				{
+					OdbcConnection cnn = new OdbcConnection(cfg["CheckODBC"]);
+					cnn.Open();
+					if(CfgValue("Verbose")) { output += "ODBC connectivity: Server is running version " + cnn.ServerVersion + ".\n"; }
+					cnn.Close();
+				}
+			}
+			catch (OdbcException e)
+			{
+				output += "ODBC connectivity failure: " + e.Message;
+				alarms = true;
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "ODBC checks: Network connectivity failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+			
+			
 			// Footers
 			if(alarms == false) output += "No check failed.";
 			output += cfg["CustomText"];
 			if(alarms == true || CfgValue("AlwaysRaise")) // Alarms were raised
 			{
+				// NodePoint notifications
 				if(CfgValue("NotifyNodePoint") && CfgValue("NotifyNodePointKey") && CfgValue("NotifyNodePointAddress") && CfgValue("NotifyNodePointProduct"))
 				{
 					try
@@ -281,6 +600,7 @@ namespace Healthstone
 						EventLog.WriteEntry("Healthstone", "NodePoint ticket entry failed: " + e, EventLogEntryType.Error); // If NodePoint connection fails, write an Event Log error
 					}
 				}
+				// Pushbullet notifications
 				if(CfgValue("NotifyPushbullet") && CfgValue("NotifyPushbulletKey"))
 				{
 					try
@@ -301,6 +621,7 @@ namespace Healthstone
 						EventLog.WriteEntry("Healthstone", "NodePoint ticket entry failed: " + e, EventLogEntryType.Error); // If Pushbullet notify fails, write an Event Log error
 					}
 				}
+				// Email notifications
 				if(CfgValue("NotifyEmail") && CfgValue("NotifyEmailServer") && CfgValue("NotifyEmailPort") && CfgValue("NotifyEmailFrom") && CfgValue("NotifyEmailTo"))
 				{
 					try
@@ -318,6 +639,7 @@ namespace Healthstone
 						EventLog.WriteEntry("Healthstone", "Email notification failed: " + e, EventLogEntryType.Error); // If email sending failed, write an Event Log error
 					}
 				}
+				// Event Log
 				if(CfgValue("RaiseErrors")) EventLog.WriteEntry("Healthstone", output, EventLogEntryType.Error); // Log an error or warning to Event Log at the end
 				else EventLog.WriteEntry("Healthstone", output, EventLogEntryType.Warning);
 			}
