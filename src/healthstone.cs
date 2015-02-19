@@ -6,6 +6,7 @@ using System;
 using System.Windows;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -14,6 +15,7 @@ using System.Management;
 using System.ServiceProcess;
 using System.Timers;
 using System.Diagnostics;
+using System.Net;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
@@ -26,7 +28,11 @@ namespace Healthstone
 	{
 		static Timer hstimer;
 		public Dictionary<string, string> cfg;
-
+		public string output;
+		public bool alarms;
+		public WebClient wc;
+		public ManagementObjectSearcher wmi;
+		
 		public Program() // Setting service name
         {
             this.ServiceName = "Healthstone";
@@ -44,18 +50,17 @@ namespace Healthstone
 		{
 			cfg = new Dictionary<string, string>();
 			string line;
-			string[] values;
-			char[] delimiterChars = { '=', ':', '\t' }; // Characters available to split keys and values in .cfg file
 			RegistryKey rkey = Registry.LocalMachine.OpenSubKey("Software\\Healthstone");
 			System.IO.StreamReader cfgfile = new System.IO.StreamReader((string)rkey.GetValue("Config"));
 			while((line = cfgfile.ReadLine()) != null)
 			{
-				if(line.Length > 0 && line.Trim()[0] != '#') // Avoid empty lines and comments
+				line = line.Trim();
+				if(line.Length > 0 && line[0] != '#') // Avoid empty lines and comments
 				{
-					int index = line.LastIndexOf('#');
+					int index = line.IndexOf('#');
 					if(index > 0) line = line.Substring(0, index);   // Catch same-line comments
-					values = line.Trim().Split(delimiterChars);
-					if(values.Length == 2) { cfg.Add(values[0].Trim(), values[1].Trim()); } // Assign key:value pairs to our cfg dictionary
+					index = line.IndexOf(':');
+					if(index > 0) { cfg.Add(line.Substring(0, index).Trim(), line.Substring(index + 1, line.Length - index - 1).Trim()); } // Assign key:value pairs to our cfg dictionary
 				}
 			}
 			cfgfile.Close();
@@ -99,14 +104,25 @@ namespace Healthstone
 			return (int)((date2 - date1).TotalHours);
 		}
 
+		private bool CfgValue(string s)
+		{
+			if(!cfg.ContainsKey(s))
+			{
+				output += "Configuration error: Missing key " + s + "\n";
+				alarms = true;
+				return false;
+			}
+			if(string.Compare(cfg[s], "false") == 0) return false;
+			return true;
+		}
+		
 		private void DoChecks(object sender, System.Timers.ElapsedEventArgs hse)
 		{
 			hstimer.Stop();
 			
 			// Headers
-			string output = "Healthstone checks: " + Environment.MachineName; // The output string contains the results from all checks
-			bool alarms = false;
-			ManagementObjectSearcher wmi;
+			output = "Healthstone checks: " + Environment.MachineName; // The output string contains the results from all checks
+			alarms = false;
 			
 			try // Get computer name
 			{
@@ -129,7 +145,7 @@ namespace Healthstone
 				wmi = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem");
 				foreach(ManagementObject items in wmi.Get())
 				{
-					if(string.Compare(cfg["CheckDEP"], "false") != 0)
+					if(CfgValue("CheckDEP"))
 					{
 						if(Int32.Parse(items["DataExecutionPrevention_SupportPolicy"].ToString()) == 0)
 						{
@@ -137,7 +153,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckTimeZone"], "false") != 0)
+					if(CfgValue("CheckTimeZone"))
 					{
 						if((Int32.Parse(items["CurrentTimeZone"].ToString()) / 60) != Int32.Parse(cfg["CheckTimeZone"]))
 						{
@@ -145,7 +161,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckCodePage"], "false") != 0)
+					if(CfgValue("CheckCodePage"))
 					{
 						if(Int32.Parse(items["CodeSet"].ToString()) != Int32.Parse(cfg["CheckCodePage"]))
 						{
@@ -153,7 +169,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckLocale"], "false") != 0)
+					if(CfgValue("CheckLocale"))
 					{
 						if(string.Compare(items["Locale"].ToString(), cfg["CheckLocale"]) != 0)
 						{
@@ -161,7 +177,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckFreeMemory"], "false") != 0)
+					if(CfgValue("CheckFreeMemory"))
 					{
 						if((Int32.Parse(items["FreePhysicalMemory"].ToString()) / 1000) < Int32.Parse(cfg["CheckFreeMemory"]))
 						{
@@ -169,7 +185,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckLastBoot"], "false") != 0)
+					if(CfgValue("CheckLastBoot"))
 					{
 						if(DateToHours(items["LastBootUpTime"].ToString()) < Int32.Parse(cfg["CheckLastBoot"]))
 						{
@@ -177,7 +193,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckSystemStatus"], "false") != 0)
+					if(CfgValue("CheckSystemStatus"))
 					{
 						if(string.Compare(items["Status"].ToString(), "OK") != 0)
 						{
@@ -185,7 +201,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckProcessCount"], "false") != 0)
+					if(CfgValue("CheckProcessCount"))
 					{
 						if(Int32.Parse(items["NumberOfProcesses"].ToString()) > Int32.Parse(cfg["CheckProcessCount"]))
 						{
@@ -195,14 +211,21 @@ namespace Healthstone
 					}
 				}
 			}
-			catch (Exception) {}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "WMI Query failure: " + e;
+					alarms = true;				
+				}
+			}
 
 			try // Check anti virus
 			{
 				wmi = new ManagementObjectSearcher("root\\SecurityCenter2", "SELECT * FROM AntiVirusProduct");
 				foreach(ManagementObject items in wmi.Get())
 				{
-					if(string.Compare(cfg["CheckAntiVirus"], "false") != 0)
+					if(CfgValue("CheckAntiVirus"))
 					{
 						if(string.Compare(items["displayName"].ToString(), "") == 0)
 						{
@@ -210,7 +233,7 @@ namespace Healthstone
 							alarms = true;
 						}
 					}
-					if(string.Compare(cfg["CheckAntiVirusState"], "false") != 0)
+					if(CfgValue("CheckAntiVirusState"))
 					{
 						if(Int32.Parse(items["productState"].ToString()).ToString("X6")[2] == '0') // This bit is for disabled
 						{
@@ -225,14 +248,77 @@ namespace Healthstone
 					}
 				}
 			}
-			catch (Exception) {}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "WMI Query failure: " + e;
+					alarms = true;				
+				}
+			}
 
 			// Footers
 			if(alarms == false) output += "No check failed.";
 			output += cfg["CustomText"];
-			if(alarms == true || Convert.ToBoolean(cfg["AlwaysRaise"])) // Alarms were raised
+			if(alarms == true || CfgValue("AlwaysRaise")) // Alarms were raised
 			{
-				if(Convert.ToBoolean(cfg["RaiseErrors"])) EventLog.WriteEntry("Healthstone", output, EventLogEntryType.Error);
+				if(CfgValue("NotifyNodePoint") && CfgValue("NotifyNodePointKey") && CfgValue("NotifyNodePointAddress") && CfgValue("NotifyNodePointProduct"))
+				{
+					try
+					{
+						wc = new WebClient();
+						wc.QueryString.Add("api", "add_ticket");
+						wc.QueryString.Add("key", cfg["NotifyNodePointKey"]);
+						wc.QueryString.Add("product_id", cfg["NotifyNodePointProduct"]);
+						wc.QueryString.Add("release_id", "1.0");
+						wc.QueryString.Add("title", "Healthstone checks: " + Environment.MachineName);
+						wc.QueryString.Add("description", output);
+						string result = wc.DownloadString(cfg["NotifyNodePointAddress"]);
+						if(CfgValue("NotifyDebug")) { output += "NodePoint ticket sent: " + result; }
+					}
+					catch (Exception e)
+					{
+						EventLog.WriteEntry("Healthstone", "NodePoint ticket entry failed: " + e, EventLogEntryType.Error); // If NodePoint connection fails, write an Event Log error
+					}
+				}
+				if(CfgValue("NotifyPushbullet") && CfgValue("NotifyPushbulletKey"))
+				{
+					try
+					{
+						wc = new WebClient();
+						wc.Credentials = new NetworkCredential(cfg["NotifyPushbulletKey"], "");
+						byte[] response = wc.UploadValues("https://api.pushbullet.com/v2/pushes", new NameValueCollection()
+						{
+							{ "type", "note" },
+							{ "title", "Healthstone checks: " + Environment.MachineName },
+							{ "body", output }
+						});
+						string result = System.Text.Encoding.UTF8.GetString(response);
+						if(CfgValue("NotifyDebug")) { output += "Pushbullet notification sent: " + result; }
+					}
+					catch (Exception e)
+					{
+						EventLog.WriteEntry("Healthstone", "NodePoint ticket entry failed: " + e, EventLogEntryType.Error); // If Pushbullet notify fails, write an Event Log error
+					}
+				}
+				if(CfgValue("NotifyEmail") && CfgValue("NotifyEmailServer") && CfgValue("NotifyEmailPort") && CfgValue("NotifyEmailFrom") && CfgValue("NotifyEmailTo"))
+				{
+					try
+					{
+						System.Net.Mail.MailMessage message = new System.Net.Mail.MailMessage();
+						foreach (string s in cfg["NotifyEmailTo"].Split(' ')) { message.To.Add(s); }
+						message.Subject = "Healthstone checks: " + Environment.MachineName;
+						message.From = new System.Net.Mail.MailAddress(cfg["NotifyEmailFrom"]);
+						message.Body = output;
+						System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient(cfg["NotifyEmailServer"]);
+						smtp.Send(message);
+					}
+					catch (Exception e)
+					{
+						EventLog.WriteEntry("Healthstone", "Email notification failed: " + e, EventLogEntryType.Error); // If email sending failed, write an Event Log error
+					}
+				}
+				if(CfgValue("RaiseErrors")) EventLog.WriteEntry("Healthstone", output, EventLogEntryType.Error); // Log an error or warning to Event Log at the end
 				else EventLog.WriteEntry("Healthstone", output, EventLogEntryType.Warning);
 			}
 			else
