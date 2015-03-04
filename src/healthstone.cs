@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2015 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.1.0")]
 
 namespace Healthstone
 {
@@ -274,6 +274,39 @@ namespace Healthstone
 				if(CfgValue("RaiseQueryFailures"))
 				{
 					output += "Computer checks: WMI Query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // Check running processes
+			{
+				if(CfgValue("CheckProcesses"))
+				{
+					wmi = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_Process");
+					foreach(string p in cfg["CheckProcesses"].Split(' '))
+					{
+						bool found = false;
+						foreach(ManagementObject items in wmi.Get())
+						{
+							if(string.Compare(items["Caption"].ToString(), p) == 0)
+							{
+								found = true;
+							}
+						}
+						if(!found)
+						{
+							output +=  "Process not found in list of running process: " + p + "\n";
+							alarms = true;
+						}
+						else if(CfgValue("Verbose")) { output +=  "Process running: " + p + "\n"; }
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Processes check: WMI Query failure: " + e + "\n";
 					alarms = true;				
 				}
 			}
@@ -573,7 +606,6 @@ namespace Healthstone
 					alarms = true;				
 				}
 			}
-			
 			
 			// Footers
 			if(alarms == false) output += "No check failed.";
