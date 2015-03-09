@@ -1,8 +1,6 @@
 # Healthstone
 Healthstone is an open source and lightweight Windows system monitoring service able to run dozens of customizable health checks. If any check fails, it can notify the Event Log, send emails, file a NodePoint ticket, or send a notification using Pushbullet. It runs on any Windows XP, 7, 8, Server 2008 or Server 2012 system. It can be used to monitor servers, or the state of Windows desktops in any environment, along with other services such as IIS, SQL Server, etc.
 
-To install, unzip the files somewhere and run `install.bat`. This will install to `C:\Windows\healthstone` by default and activate the service. To configure it, edit the file `healthstone.cfg` in that folder and restart the service.
-
 ### Screenshots
 ![](http://dendory.net/files/healthstone.jpg)
 
@@ -20,7 +18,7 @@ To install, unzip the files somewhere and run `install.bat`. This will install t
 * Check if Windows Update is enabled.
 * Check when the last Windows Updates were installed.
 * Check for low disk space.
-* Check for a running process threshold.
+* Check for a running processes.
 * Check if there is an Anti Virus product installed.
 * Check if the Anti Virus is disabled or out of date.
 * Check if the firewall is off.
@@ -32,8 +30,8 @@ To install, unzip the files somewhere and run `install.bat`. This will install t
 * Check an ODBC database connection.
 * Check custom ports.
 
-### Author
-(C) 2015 Patrick Lambert - http://dendory.net
+### Installation
+To install, unzip the files in the `bin` folder somewhere and run `install.bat` as Administrator. This will install to `C:\Windows\healthstone` by default and activate the service. To configure it, edit the file `healthstone.cfg` in that folder and restart the service. It requires the Microsoft .NET Framework 3.5 to be installed.
 
-This software is provided under the [MIT License](http://opensource.org/licenses/MIT).
-
+### Compiling the source
+The source is in C Sharp inside the `src` folder and is easy to customize. To build it, simply run `make.bat`. You do not need any specific tool other than the .NET Framework 3.5.
