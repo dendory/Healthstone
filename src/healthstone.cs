@@ -496,6 +496,35 @@ namespace Healthstone
 					alarms = true;				
 				}
 			}
+
+			try // Check Windows Update KB fixes
+			{
+				if(CfgValue("CheckWUHotFixes"))
+				{
+					wmi = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_QuickFixEngineering");
+					foreach(string p in cfg["CheckWUHotFixes"].Split(' '))
+					{
+						bool found = false;
+						foreach(ManagementObject items in wmi.Get())
+						{
+							if(string.Compare(p, items["HotFixID"].ToString()) == 0) { found = true; }
+						}
+						if(!found)
+						{
+							output +=  "Missing update: " + p + "\n";
+							alarms = true;
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Windows Update: WMI Query failure: " + e + "\n";
+					alarms = true;
+				}
+			}
 			
 			try // check cpu load
 			{
