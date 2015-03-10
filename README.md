@@ -6,7 +6,7 @@ Healthstone is an open source and lightweight Windows system monitoring service 
 
 ![](healthstone0.jpg)
 
-### Features
+### Health checks
 * Check if DEP is enabled.
 * Check for a specific time zone.
 * Check for a specific code page.
@@ -30,6 +30,12 @@ Healthstone is an open source and lightweight Windows system monitoring service 
 * Check if a web URL can be loaded without error.
 * Check an ODBC database connection.
 * Check custom ports.
+
+### Notifications
+* Email
+* Event Log
+* NodePoint Ticket System
+* Pushbullet
 
 ### Installation
 To install, unzip the files in the `bin` folder somewhere and run `install.bat` as Administrator. This will install to `C:\Windows\healthstone` by default and activate the service. To configure it, edit the file `healthstone.cfg` in that folder and restart the service. It requires the Microsoft .NET Framework 3.5 to be installed.
