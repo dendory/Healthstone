@@ -17,6 +17,7 @@ Healthstone is an open source and lightweight Windows system monitoring service 
 * Check overall system status.
 * Check if Windows Update is enabled.
 * Check when the last Windows Updates were installed.
+* Check if specific updates are installed.
 * Check for low disk space.
 * Check for a running processes.
 * Check if there is an Anti Virus product installed.
