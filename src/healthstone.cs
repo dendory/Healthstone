@@ -20,6 +20,8 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Data.Odbc;
+using System.Text;
+using System.Security.Cryptography;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
@@ -698,6 +700,46 @@ namespace Healthstone
 					catch (Exception e)
 					{
 						EventLog.WriteEntry("Healthstone", "Email notification failed: " + e, EventLogEntryType.Error); // If email sending failed, write an Event Log error
+					}
+				}
+				// Custom program
+				if(CfgValue("NotifyProgram"))
+				{
+					try
+					{
+						System.Diagnostics.Process pProcess = new System.Diagnostics.Process();
+						pProcess.StartInfo.FileName = cfg["NotifyProgram"];
+						pProcess.StartInfo.Arguments = output.Replace('\n', ' ');
+						pProcess.StartInfo.UseShellExecute = false;
+						pProcess.StartInfo.RedirectStandardOutput = true;   
+						pProcess.Start();
+						string result = pProcess.StandardOutput.ReadToEnd();
+						pProcess.WaitForExit(10000);  // wait 10 secs for exit
+						if(CfgValue("NotifyDebug")) { output += "Custom program notification sent: " + result; }
+					}
+					catch (Exception e)
+					{
+						EventLog.WriteEntry("Healthstone", "Email notification failed: " + e, EventLogEntryType.Error); // If process execution fails, write an Event Log error
+					}
+				}	
+				// SNS notification
+				if(CfgValue("NotifyAWSTopic") && CfgValue("NotifyAWSRegion") && CfgValue("NotifyAWSKey") && CfgValue("NotifyAWSSecret"))
+				{
+					try
+					{
+						string query = "AWSAccessKeyId=" + Uri.EscapeDataString(cfg["NotifyAWSKey"]) + "&Action=Publish&Message=" + Uri.EscapeDataString(output.Replace("("," ").Replace(")"," ")) + "&SignatureMethod=HmacSHA256&SignatureVersion=2&TargetArn=" + Uri.EscapeDataString(cfg["NotifyAWSTopic"]) + "&Timestamp=" + Uri.EscapeDataString(System.DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+						string tosign = "GET\nsns." + cfg["NotifyAWSRegion"] + ".amazonaws.com\n/\n" + query;
+						UTF8Encoding encoding = new UTF8Encoding();
+						HMACSHA256 hmac = new HMACSHA256(encoding.GetBytes(cfg["NotifyAWSSecret"]));
+						string signature = Convert.ToBase64String(hmac.ComputeHash(encoding.GetBytes(tosign)));
+						query += "&Signature=" + Uri.EscapeDataString(signature);
+						wc = new WebClient();
+						string result = wc.DownloadString("https://sns." + cfg["NotifyAWSRegion"] + ".amazonaws.com/?" + query);
+						if(CfgValue("NotifyDebug")) { output += "SNS notification sent: " + result; }
+					}
+					catch (Exception e)
+					{
+						EventLog.WriteEntry("Healthstone", "SNS notification failed: " + e, EventLogEntryType.Error); // If process execution fails, write an Event Log error
 					}
 				}
 				// Event Log
