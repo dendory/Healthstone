@@ -85,7 +85,7 @@ namespace Healthstone
 		{
 			hstimer.Stop();
 		}
-		
+ 
 		private string DateToString(string s) // Convert .NET WMI date to DateTime and return as a string
 		{
 			int year = int.Parse(s.Substring(0, 4));
