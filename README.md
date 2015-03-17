@@ -41,7 +41,7 @@ Healthstone is an open source and lightweight Windows system monitoring service 
 * Run custom program
 
 ### Installation
-To install, run `setup.exe`. Make sure you have the Microsoft .NET Framework 3.5 installed.
+To install, download and run `setup.exe` as a local administrator. Make sure you have the Microsoft .NET Framework 3.5 installed.
 
 ### Modifying the source
 The source is in C# inside the `src` folder and is easy to customize. To build it, simply run `make.bat`. You do not need any specific tool other than the .NET Framework 3.5.
