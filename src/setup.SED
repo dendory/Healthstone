@@ -22,13 +22,13 @@ AdminQuietInstCmd=%AdminQuietInstCmd%
 UserQuietInstCmd=%UserQuietInstCmd%
 SourceFiles=SourceFiles
 [Strings]
-InstallPrompt=This will install the Healthstone System Monitor
+InstallPrompt=This will install Healthstone System Monitor 1.0.3
 DisplayLicense=
 FinishMessage=
 TargetName=C:\scripts\git\healthstone\setup.exe
 FriendlyName=Healthstone
 AppLaunched=cmd /c install.bat
-PostInstallCmd=<None>
+PostInstallCmd=<none>
 AdminQuietInstCmd=
 UserQuietInstCmd=
 FILE0="healthstone.cfg"

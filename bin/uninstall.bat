@@ -1,12 +1,13 @@
 :: Install Healthstone on the local system
 @echo off
 echo.
-echo This will uninstall Healthstone System Monitor from %SYSTEMROOT%\healthstone
+echo This will uninstall Healthstone System Monitor from %PROGRAMFILES%\healthstone
 echo.
 pause
 net stop Healthstone
 %SYSTEMROOT%\System32\sc.exe delete Healthstone
-del %SYSTEMROOT%\healthstone\healthstone.cfg
-del %SYSTEMROOT%\healthstone\healthstone.exe
+del "%PROGRAMFILES%\healthstone\healthstone.cfg"
+del "%PROGRAMFILES%\healthstone\healthstone.exe"
+rd "%PROGRAMFILES%\healthstone"
 echo Done.
 pause
