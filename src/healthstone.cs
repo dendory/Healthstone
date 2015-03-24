@@ -113,7 +113,12 @@ namespace Healthstone
 			return (int)((date2 - date1).TotalHours);
 		}
 
-		private bool CfgValue(string s)
+		static uint SwapEndianness(ulong x) // Swap Endian value for NTP query
+		{
+			return (uint) (((x & 0x000000ff) << 24) + ((x & 0x0000ff00) << 8) + ((x & 0x00ff0000) >> 8) + ((x & 0xff000000) >> 24));
+		}
+
+		private bool CfgValue(string s) // Check if a value exists and whether it is non-false
 		{
 			if(!cfg.ContainsKey(s))
 			{
@@ -125,7 +130,7 @@ namespace Healthstone
 			return true;
 		}
 		
-		private void DoChecks(object sender, System.Timers.ElapsedEventArgs hse)
+		private void DoChecks(object sender, System.Timers.ElapsedEventArgs hse) // Main checks loop
 		{
 			hstimer.Stop();
 			
@@ -634,6 +639,44 @@ namespace Healthstone
 				if(CfgValue("RaiseQueryFailures"))
 				{
 					output += "ODBC checks: Network connectivity failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // check time
+			{
+				if(CfgValue("CheckTime"))
+				{
+					var ntpData = new byte[48];  // stackoverflow.com/questions/1193955
+					ntpData[0] = 0x1B;   // query for NTP server
+					var addresses = Dns.GetHostEntry(cfg["CheckTime"]).AddressList;
+					var ipEndPoint = new IPEndPoint(addresses[0], 123);   // connect to NTP server port 123
+					var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+					socket.Connect(ipEndPoint);
+					socket.ReceiveTimeout = 3000;     
+					socket.Send(ntpData);  // send
+					var pctime = (long)(DateTime.UtcNow.Subtract(new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc))).TotalSeconds * 1000;  // current time (ms)
+					socket.Receive(ntpData);  // receive
+					socket.Close();
+					const byte serverReplyTime = 40;
+					ulong intPart = BitConverter.ToUInt32(ntpData, serverReplyTime);
+					ulong fractPart = BitConverter.ToUInt32(ntpData, serverReplyTime + 4);
+					intPart = SwapEndianness(intPart);
+					fractPart = SwapEndianness(fractPart);
+					var ntptime = (intPart * 1000) + ((fractPart * 1000) / 0x100000000L); // NTP server time (ms)
+					if(((ulong)ntptime + 300000) < (ulong)pctime || (ulong)pctime < ((ulong)ntptime - 300000))
+					{
+						output += "Time check failed: Local time: " + (DateTime.UtcNow) + ", NTP time: " + (new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddMilliseconds((long)ntptime) + "\n";
+						alarms = true;
+					}
+					else if(CfgValue("Verbose")) { output += "Local time: " + (DateTime.UtcNow) + ", NTP time: " + (new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddMilliseconds((long)ntptime) + "\n"; }
+				}
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Time checks: NTP query failure: " + e + "\n";
 					alarms = true;				
 				}
 			}

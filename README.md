@@ -31,6 +31,7 @@ Healthstone is an open source and lightweight Windows system monitoring service 
 * Check if a web URL can be loaded without error.
 * Check an ODBC database connection.
 * Check custom ports.
+* Check time against a NTP server.
 
 ### Notifications
 * Email
