@@ -26,7 +26,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2015 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.0.3.0")]
+[assembly: AssemblyFileVersion("1.0.4.0")]
 
 namespace Healthstone
 {
@@ -367,7 +367,7 @@ namespace Healthstone
 					}
 				}
 			}
-			
+
 			try // Check temperature
 			{
 				wmi = new ManagementObjectSearcher("root\\WMI", "SELECT * FROM MSAcpi_ThermalZoneTemperature");
@@ -532,7 +532,7 @@ namespace Healthstone
 					alarms = true;
 				}
 			}
-			
+
 			try // check cpu load
 			{
 				if(CfgValue("CheckCpuLoad"))
@@ -595,7 +595,7 @@ namespace Healthstone
 					alarms = true;				
 				}
 			}
-			
+
 			try // check http request
 			{
 				if(CfgValue("CheckNetHttp"))
@@ -618,7 +618,7 @@ namespace Healthstone
 					alarms = true;				
 				}
 			}
-			
+
 			try // check ODBC
 			{
 				if(CfgValue("CheckODBC"))
@@ -680,7 +680,7 @@ namespace Healthstone
 					alarms = true;				
 				}
 			}
-			
+
 			// Footers
 			if(alarms == false) output += "No check failed.";
 			output += cfg["CustomText"];
@@ -704,6 +704,22 @@ namespace Healthstone
 					catch (Exception e)
 					{
 						EventLog.WriteEntry("Healthstone", "NodePoint ticket entry failed: " + e, EventLogEntryType.Error); // If NodePoint connection fails, write an Event Log error
+					}
+				}
+				// Healthstone dashboard
+				if(CfgValue("HealthstoneDashboard"))
+				{
+					try
+					{
+						wc = new WebClient();
+						wc.QueryString.Add("alarms", alarms.ToString());
+						wc.QueryString.Add("output", output);
+						string result = wc.DownloadString(cfg["HealthstoneDashboard"]);
+						if(CfgValue("NotifyDebug")) { output += "Healthstone dashboard updated: " + result; }
+					}
+					catch (Exception e)
+					{
+						EventLog.WriteEntry("Healthstone", "Healthstone dashboard could not be updated: " + e, EventLogEntryType.Error);
 					}
 				}
 				// Pushbullet notifications
