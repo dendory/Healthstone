@@ -14,5 +14,3 @@ net start Healthstone
 echo.
 echo Installation done. To customize your installation edit %PROGRAMFILES%\healthstone\healthstone.cfg and restart the service.
 echo.
-pause
-notepad "%PROGRAMFILES%\healthstone\healthstone.cfg"

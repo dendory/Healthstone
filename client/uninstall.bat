@@ -1,7 +1,8 @@
-:: Install Healthstone on the local system
+:: UnInstall Healthstone from the local system
 @echo off
 echo.
 echo This will uninstall Healthstone System Monitor from %PROGRAMFILES%\healthstone
+echo Press ENTER to continue, CTRL-C to abort.
 echo.
 pause
 net stop Healthstone
@@ -10,4 +11,3 @@ del "%PROGRAMFILES%\healthstone\healthstone.cfg"
 del "%PROGRAMFILES%\healthstone\healthstone.exe"
 rd "%PROGRAMFILES%\healthstone"
 echo Done.
-pause
