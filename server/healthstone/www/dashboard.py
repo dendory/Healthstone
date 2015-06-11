@@ -33,7 +33,6 @@ try:
 except:
 	execDB("CREATE TABLE systems (ip TEXT, name TEXT, cpu INT, interval INT, alarm INT, output TEXT, time INT);", [])
 
-
 #
 # Connection from Healthstone clients
 #
@@ -60,6 +59,7 @@ if query.getvalue("output") and query.getvalue("name"):
 	print("OK")
 	db.close()
 	quit(0)
+
 #
 # Dashboard display
 #
