@@ -10,6 +10,8 @@ See [http://healthstone.ca](http://healthstone.ca) for documentation.
 
 ![](healthstone0.jpg)
 
+![](dashboard.jpg)
+
 ### Health checks
 * Check if DEP is enabled.
 * Check for a specific time zone.

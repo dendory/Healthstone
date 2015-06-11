@@ -66,14 +66,19 @@ if query.getvalue("output") and query.getvalue("name"):
 f = open("top.html", "r")
 for line in f:
 	print(line.replace("##TIME##", time.strftime("%Y/%m/%d %H:%M:%S")))
+if query.getvalue("ip") and query.getvalue("delete"): # delete an entry
+	execDB("DELETE FROM systems WHERE ip = ? AND name = ?", [query.getvalue("ip"), query.getvalue("delete")])
+	print("<p><center><b>The specified system has been removed from the list.</b></center></p>")
 if query.getvalue("ip") and query.getvalue("name"): # details on one system
 	rows = queryDB("SELECT * FROM systems WHERE ip = ? AND name = ?", [query.getvalue("ip"), query.getvalue("name")])
 	for row in rows:
-		if row[4] == 1:
+		if (row[6] + row[3] * 2) < time.time():
+			print("<div class='panel panel-warning'>")
+		elif row[4] == 1:
 			print("<div class='panel panel-danger'>")
 		else:
 			print("<div class='panel panel-success'>")
-		print("<div class='panel-heading'><h3 class='panel-title'><span style='float:right'><i>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])) + "</i></span>" + row[1] + " (" + row[0] + ")</h3></div><div class='panel-body'><pre>" + row[5] + "</pre></div></div>")
+		print("<div class='panel-heading'><h3 class='panel-title'><span style='float:right'><i>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])) + "</i></span>" + row[1] + " (" + row[0] + ")</h3></div><div class='panel-body'><pre>" + row[5] + "</pre><br><form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 else: # list of systems
 	print("<table class='table table-striped'><tr><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr>")
 	rows = queryDB("SELECT * FROM systems ORDER BY time DESC", [])
