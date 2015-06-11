@@ -1,0 +1,13 @@
+Healthstone System Monitor
+--------------------------
+
+Requirements:
+- Microsoft .NET Framework 3.5
+- Any Windows 64 bits system
+
+Installation:
+- Copy the files to the host you wish to monitor or an accessible network location
+- Edit 'healthstone.cfg' the way you wish the service to behave
+- Run 'install.bat' as a local administrator to install the service on the local system
+
+(C) 2015 Patrick Lambert - http://healthstone.ca

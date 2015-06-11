@@ -133,6 +133,7 @@ namespace Healthstone
 		private void DoChecks(object sender, System.Timers.ElapsedEventArgs hse) // Main checks loop
 		{
 			hstimer.Stop();
+			float curval = 0;
 			
 			// Headers
 			output = "Healthstone checks: " + Environment.MachineName; // The output string contains the results from all checks
@@ -546,7 +547,7 @@ namespace Healthstone
 					float val2 = cpu.NextValue();
 					Thread.Sleep(500);
 					float val3 = cpu.NextValue();					
-					float curval = Math.Max(val1, Math.Max(val2, val3));
+					curval = Math.Max(val1, Math.Max(val2, val3));
 					if(curval > Int32.Parse(cfg["CheckCpuLoad"]))
 					{
 						output += "High CPU load: " + curval + "%\n";
@@ -684,6 +685,25 @@ namespace Healthstone
 			// Footers
 			if(alarms == false) output += "No check failed.";
 			output += cfg["CustomText"];
+			// Healthstone dashboard
+			if(CfgValue("NotifyHealthstoneDashboard"))
+			{
+				try
+				{
+					wc = new WebClient();
+					wc.QueryString.Add("alarms", alarms.ToString());
+					wc.QueryString.Add("cpu", curval.ToString());
+					wc.QueryString.Add("name", Environment.MachineName);
+					wc.QueryString.Add("interval", cfg["Interval"]);
+					wc.QueryString.Add("output", output);
+					string result = wc.DownloadString(cfg["NotifyHealthstoneDashboard"]);
+					if(CfgValue("NotifyDebug")) { output += "Healthstone dashboard updated: " + result; }
+				}
+				catch (Exception e)
+				{
+					EventLog.WriteEntry("Healthstone", "Healthstone dashboard could not be updated: " + e, EventLogEntryType.Error);
+				}
+			}
 			if(alarms == true || CfgValue("AlwaysRaise")) // Alarms were raised
 			{
 				// NodePoint notifications
@@ -704,22 +724,6 @@ namespace Healthstone
 					catch (Exception e)
 					{
 						EventLog.WriteEntry("Healthstone", "NodePoint ticket entry failed: " + e, EventLogEntryType.Error); // If NodePoint connection fails, write an Event Log error
-					}
-				}
-				// Healthstone dashboard
-				if(CfgValue("HealthstoneDashboard"))
-				{
-					try
-					{
-						wc = new WebClient();
-						wc.QueryString.Add("alarms", alarms.ToString());
-						wc.QueryString.Add("output", output);
-						string result = wc.DownloadString(cfg["HealthstoneDashboard"]);
-						if(CfgValue("NotifyDebug")) { output += "Healthstone dashboard updated: " + result; }
-					}
-					catch (Exception e)
-					{
-						EventLog.WriteEntry("Healthstone", "Healthstone dashboard could not be updated: " + e, EventLogEntryType.Error);
 					}
 				}
 				// Pushbullet notifications

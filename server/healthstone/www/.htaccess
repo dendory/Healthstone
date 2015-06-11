@@ -1,0 +1,3 @@
+DirectoryIndex dashboard.py
+Options +ExecCGI
+AddHandler cgi-script .py

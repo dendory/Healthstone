@@ -40,6 +40,7 @@ See [http://healthstone.ca](http://healthstone.ca) for documentation.
 * Email
 * Event Log
 * NodePoint Ticket System
+* Healthstone dashboard
 * Pushbullet notification system
 * Amazon SNS notifications
 * Run custom program

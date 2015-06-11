@@ -1,0 +1,18 @@
+Healthstone dashboard
+---------------------
+
+Requirements:
+- Python 3.x
+- IIS or Apache web server with CGI support
+
+Installation:
+- Link the files in 'www' to an accessible location (for example, make a virtual site from http://localhost/healthstone pointing to that folder)
+- Make sure the Python script has write access to ../db/
+
+Troubleshooting:
+- If you get an error loading the site, make sure the rewrite engine is turned on
+- You may need to edit the 'web.config' or '.htaccess' files manually if your Python installation path is different
+- If you get a 404 error on IIS, make sure you allow the script in 'ISAPI and CGI restrictions'
+- Check your web server error log to find out more
+
+(C) 2015 Patrick Lambert - http://healthstone.ca
