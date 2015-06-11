@@ -50,11 +50,11 @@ if query.getvalue("output") and query.getvalue("name"):
 	if query.getvalue("interval"):
 		interval = int(query.getvalue("interval"))
 	found = False
-	rows = queryDB("SELECT * FROM systems WHERE ip = ? AND name = ?", [os.environ["REMOTE_ADDR"], query.getvalue("name")])
+	rows = queryDB("SELECT * FROM systems WHERE name = ?", [query.getvalue("name")])
 	for row in rows:
 		found = True
 	if found:
-		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ? WHERE ip = ? AND name = ?", [cpu, interval, alarm, query.getvalue("output"), now, os.environ["REMOTE_ADDR"], query.getvalue("name")])
+		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, query.getvalue("output"), now, os.environ["REMOTE_ADDR"], query.getvalue("name")])
 	else:
 		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], query.getvalue("name"), cpu, interval, alarm, query.getvalue("output"), now])
 	print("OK")
