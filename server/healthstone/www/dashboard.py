@@ -61,7 +61,7 @@ if query.getvalue("output") and query.getvalue("name"):
 	else:
 		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], query.getvalue("name"), cpu, interval, alarm, query.getvalue("output"), now])
 	execDB("INSERT INTO history VALUES (?, ?, ?)", [query.getvalue("name"), cpu, now])
-	execDB("DELETE FROM history WHERE name = ? AND time < ?", [query.getvalue("name"), now - (51 * interval)])	
+	execDB("DELETE FROM history WHERE name = ? AND time < ?", [query.getvalue("name"), now - (50 * interval)])	
 	print("OK")
 	db.close()
 	quit(0)
