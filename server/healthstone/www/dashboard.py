@@ -112,10 +112,17 @@ if query.getvalue("ip") and query.getvalue("name"): # details on one system
 		print("] }]}; var ctx0 = document.getElementById('cpu').getContext('2d'); new Chart(ctx0).Line(data);</script>") 
 		print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 else: # list of systems
-	print("<table class='table table-striped'><tr><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr>")
+	print("<table class='table table-striped'><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr>")
 	rows = queryDB("SELECT * FROM systems ORDER BY time DESC", [])
 	for row in rows:
-		print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "%</td><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])) + "</td><td><form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='name' value='" + row[1] + "'><input type='submit' class='btn ")
+		print("<tr>")
+		if "Microsoft Windows" in row[5]:
+			print("<td><i class='fa fa-windows'></i></td>")
+		elif "Linux" in row[5]:
+			print("<td><i class='fa fa-linux'></i></td>")
+		else:
+			print("<td><i class='fa fa-laptop'></i></td>")			
+		print("<td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "%</td><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])) + "</td><td><form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='name' value='" + row[1] + "'><input type='submit' class='btn ")
 		if (row[6] + row[3] * 2) < time.time():
 			print("btn-warning' value='Lost contact'>")		
 		elif row[4] == 1:

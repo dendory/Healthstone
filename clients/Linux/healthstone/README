@@ -1,0 +1,13 @@
+Healthstone System Monitor
+--------------------------
+
+Requirements:
+- Python 3.x
+- Any Linux 64 bits system
+
+Installation:
+- Copy the files to the host you wish to monitor or an accessible network location
+- Edit 'healthstone.py' and enter the URL of your dashboard
+- Run 'chmod +x install.sh; sudo ./install.sh' to install the script on the local system
+
+(C) 2015 Patrick Lambert - http://healthstone.ca
