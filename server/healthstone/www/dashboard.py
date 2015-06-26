@@ -3,7 +3,7 @@ import sqlite3
 import time
 import cgi
 import os
-VERSION = "1.0.5"
+VERSION = "1.0.6"
 query = cgi.FieldStorage()
 
 #
@@ -133,5 +133,5 @@ else: # list of systems
 	print("</table>")	
 f = open("bottom.html", "r")
 for line in f:
-	print(line)
+	print(line.replace("##VERSION##", VERSION))
 db.close()
