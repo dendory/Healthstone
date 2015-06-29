@@ -1,17 +1,26 @@
 #!/usr/bin/python
+# Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
+
+#
+# BEGIN CONFIGURATION
+#
+
+# Interval (in seconds) configured in crontab between runs [number]
+Interval = 300
+
+# Acceptable CPU threshold [number|False]
+CheckCPU = 90
+
+# URL of your Healthstone dashboard [url]
+DashboardURL = "http://healthstone.ca/dashboard"
+
+#
+# END CONFIGURATION
+#
+
 import subprocess
 import urllib.request
 import urllib.parse
-
-#
-# Configuration values
-#
-# Interval (in seconds) configured in crontab [number]
-Interval = 300
-# Acceptable CPU threshold [number|False]
-CheckCPU = 90
-# URL of your dashboard [url]
-DashboardURL = "http://healthstone.ca/dashboard"
 
 #
 # Gather system data
