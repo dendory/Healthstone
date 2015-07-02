@@ -9,10 +9,10 @@
 AccessCode = "1234"
 
 # Send notification for systems that lose contacts [True|False]
-NotifyOnLostContact = False
+NotifyOnLostContact = True
 
 # Send notification for systems that raise alarms [True|False]
-NotifyOnAlarms = False
+NotifyOnAlarms = True
 
 # Send Pushbullet notifications using this API key [API key|False]
 NotifyPushbullet = False
@@ -54,7 +54,11 @@ print()
 #
 # Database init
 #
-db = sqlite3.connect("../db/dashboard.db")
+try:
+	db = sqlite3.connect("../db/dashboard.db")
+except:
+	print("Could not connect to database. Make sure this script has write access to the '../db/' folder.")
+	quit(1)
 def queryDB(query, args): # Query DB and return all rows
 	cur = db.cursor()
 	cur.execute(query, args)
