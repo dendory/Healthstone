@@ -8,8 +8,7 @@ Requirements:
 Installation:
 - Download 'healthstone-server.zip' onto your server and unzip it where you want the files to live, for example 'C:\healthstone'.
 - Edit 'dashboard.py' and configure the access code and notification settings.
-- Link the the 'www' folder to an accessible location (for example, make a virtual site from http://localhost/healthstone pointing to that folder)
-- Make sure the Python script has write access to '../db/'
+- Run 'setup.bat' on Windows or link the the 'www' folder to an accessible location (for example, make a virtual site from http://localhost/healthstone pointing to that folder) on Linux, making sure the Python script has write access to '../db/'
 
 Troubleshooting:
 - If you get an error loading the site, make sure the rewrite engine is turned on in your web server configuration

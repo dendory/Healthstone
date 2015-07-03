@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
 
 #
@@ -8,11 +8,14 @@
 # Interval (in seconds) configured in crontab between runs [number]
 Interval = 300
 
-# Acceptable CPU threshold [number|False]
+# Check for acceptable CPU threshold [number|False]
 CheckCPU = 90
 
-# URL of your Healthstone dashboard [url]
-DashboardURL = "http://healthstone.ca/dashboard"
+# Notify a Healthstone dashboard [url|False]
+NotifyDashboardURL = "http://healthstone.ca/dashboard"
+
+# Write alarms to a log file [filename|False]
+NotifyFile = False
 
 #
 # END CONFIGURATION
@@ -21,6 +24,8 @@ DashboardURL = "http://healthstone.ca/dashboard"
 import subprocess
 import urllib.request
 import urllib.parse
+import time
+VERSION = "1.0.8"
 
 #
 # Gather system data
@@ -44,5 +49,13 @@ if CheckCPU:
 #
 # Send results off
 #
-data = "alarms=" + str(alarms) + "&cpu=" + str(cpu) + "&name=" + urllib.parse.quote(hostname, '') + "&output=" + urllib.parse.quote(output, '') + "&interval=" + str(Interval)
-result = urllib.request.urlopen(DashboardURL + "/?" + data)
+if NotifyDashboardURL:
+	data = "alarms=" + str(alarms) + "&cpu=" + str(cpu) + "&name=" + urllib.parse.quote(hostname, '') + "&output=" + urllib.parse.quote(output, '') + "&interval=" + str(Interval)
+	result = urllib.request.urlopen(NotifyDashboardURL + "/?" + data)
+if NotifyFile:
+	f = open(NotifyFile, "a")
+	if alarms:
+		f.write(str(int(time.time())) + " FAILED\n" + output + "\n")
+	else:
+		f.write(str(int(time.time())) + " OK\n" + output + "\n");
+	f.close()

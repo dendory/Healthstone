@@ -3,7 +3,7 @@ Healthstone System Monitor
 
 Requirements:
 - Python 3.x
-- Any Linux 64 bits system
+- Any Linux system
 
 Installation:
 - Copy the files to the host you wish to monitor or an accessible network location

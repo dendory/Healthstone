@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
 
 #
@@ -8,14 +8,25 @@
 # Access code to access the dashboard [string]
 AccessCode = "1234"
 
-# Send notification for systems that lose contacts [True|False]
+# Send notifications for systems that lose contacts [True|False]
 NotifyOnLostContact = True
 
-# Send notification for systems that raise alarms [True|False]
+# Send notifications for systems that raise alarms [True|False]
 NotifyOnAlarms = True
 
-# Send Pushbullet notifications using this API key [API key|False]
+# Send a Pushbullet notification using this API key [API key|False]
 NotifyPushbullet = False
+
+# Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]
+NotifyNodePointURL = False
+NotifyNodePointKey = "XXXXXXX"
+NotifyNodePointProduct = "1"
+NotifyNodePointRelease = "1.0"
+
+# Send an email notification using this SMTP server, To address, and From address [smtp server|False]
+NotifySMTPServer = False
+NotifySMTPFrom = "me@example.com"
+NotifySMTPTo = "you@example.com"
 
 #
 # END CONFIGURATION
@@ -26,7 +37,10 @@ import time
 import cgi
 import os
 import urllib.request
-VERSION = "1.0.7"
+import urllib.parse
+import smtplib
+from email.mime.text import MIMEText
+VERSION = "1.0.8"
 query = cgi.FieldStorage()
 login = False
 
@@ -52,7 +66,7 @@ if 'HTTP_COOKIE' in os.environ: # Login from cookies
 print()
 
 #
-# Database init
+# Database initialization
 #
 try:
 	db = sqlite3.connect("../db/dashboard.db")
@@ -84,7 +98,7 @@ except:
 # Notifications
 #
 def notify(title, text):
-	if NotifyPushbullet:
+	if NotifyPushbullet: # Pushbullet notification
 		post_params = {
 			'type': 'note',
 			'title': 'Healthstone checks: ' + title,
@@ -94,6 +108,21 @@ def notify(title, text):
 		data = post_args.encode()
 		request = urllib.request.Request(url='https://api.pushbullet.com/v2/pushes', headers={'Authorization': 'Bearer ' + NotifyPushbullet}, data=data)
 		result = urllib.request.urlopen(request)
+	if NotifyNodePointURL: # NodePoint notification
+		data = "api=add_ticket&key=" + NotifyNodePointKey + "&product_id=" + NotifyNodePointProduct + "&release_id=" + NotifyNodePointRelease + "&title=" + urllib.parse.quote("Healthstone checks: " + title, '') + "&description=" + urllib.parse.quote(text, '')
+		result = urllib.request.urlopen(NotifyNodePointURL + "/?" + data)
+	if NotifySMTPServer: # Email notification
+		msg = MIMEText(text)
+		msg['Subject'] = 'Healthstone checks: ' + title
+		msg['From'] = NotifySMTPFrom
+		msg['To'] = NotifySMTPTo
+		s = smtplib.SMTP(NotifySMTPServer)
+		s.send_message(msg)
+		s.quit()
+
+#
+# Update list of lost contact
+#
 lostcontact = []
 rows = queryDB("SELECT name FROM lostcontact", [])
 for row in rows:
@@ -104,7 +133,6 @@ for row in rows:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		if NotifyOnLostContact:
 			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
-
 
 #
 # Connection from Healthstone clients

@@ -1,5 +1,5 @@
 //
-// Healthstone System Monitor - (C) 2015 Patrick Lambert - http://dendory.net
+// Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
 //
 
 using System;
@@ -26,7 +26,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2015 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.0.7.0")]
+[assembly: AssemblyFileVersion("1.0.8.0")]
 
 namespace Healthstone
 {
@@ -49,7 +49,7 @@ namespace Healthstone
 		
 		static void Main(string[] args) // Required elements for a service program
 		{
-			Console.WriteLine("Healthstone System Monitor - http://dendory.net");
+			Console.WriteLine("Healthstone System Monitor - http://healthstone.ca");
 			ServiceBase[] servicesToRun;
 			servicesToRun = new ServiceBase[] { new Program() };
 			ServiceBase.Run(servicesToRun);
