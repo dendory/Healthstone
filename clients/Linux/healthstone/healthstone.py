@@ -17,6 +17,9 @@ NotifyDashboardURL = "http://localhost/healthstone"
 # Write alarms to a log file [filename|False]
 NotifyFile = False
 
+# Run a custom shell command when alarms fail [command|False]
+NotifyProgram = False
+
 #
 # END CONFIGURATION
 #
@@ -59,3 +62,6 @@ if NotifyFile:
 	else:
 		f.write(str(int(time.time())) + " OK\n" + output + "\n");
 	f.close()
+if NotifyProgram:
+	if alarms:
+		print(subprocess.check_output([NotifyProgram]).decode("utf-8"))
