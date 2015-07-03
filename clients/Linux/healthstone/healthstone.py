@@ -12,7 +12,7 @@ Interval = 300
 CheckCPU = 90
 
 # Notify a Healthstone dashboard [url|False]
-NotifyDashboardURL = "http://healthstone.ca/dashboard"
+NotifyDashboardURL = "http://localhost/healthstone"
 
 # Write alarms to a log file [filename|False]
 NotifyFile = False
