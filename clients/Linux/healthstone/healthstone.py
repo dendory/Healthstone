@@ -20,6 +20,9 @@ NotifyFile = False
 # Run a custom shell command when alarms fail [command|False]
 NotifyProgram = False
 
+# Send a Pushbullet notification [API key|False]
+NotifyPushbullet = False
+
 #
 # END CONFIGURATION
 #
@@ -65,3 +68,13 @@ if NotifyFile:
 if NotifyProgram:
 	if alarms:
 		print(subprocess.check_output([NotifyProgram]).decode("utf-8"))
+if NotifyPushbullet:
+	if alarms:
+		post_params = {
+			'type': 'note',
+			'body': output
+		}
+		post_args = urllib.parse.urlencode(post_params)
+		data = post_args.encode()
+		request = urllib.request.Request(url='https://api.pushbullet.com/v2/pushes', headers={'Authorization': 'Bearer ' + NotifyPushbullet}, data=data)
+		result = urllib.request.urlopen(request)
