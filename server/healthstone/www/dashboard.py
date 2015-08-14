@@ -40,7 +40,7 @@ import urllib.request
 import urllib.parse
 import smtplib
 from email.mime.text import MIMEText
-VERSION = "1.0.8"
+VERSION = "1.0.9"
 query = cgi.FieldStorage()
 login = False
 
@@ -93,6 +93,10 @@ try:
 	execDB("SELECT * FROM lostcontact WHERE 0 = 1;", [])
 except:
 	execDB("CREATE TABLE lostcontact (name TEXT);", [])
+try:
+	execDB("SELECT * FROM log WHERE 0 = 1;", [])
+except:
+	execDB("CREATE TABLE log (sev INT, name TEXT, event TEXT, time INT);", [])
 
 #
 # Notifications
@@ -133,6 +137,8 @@ for row in rows:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		if NotifyOnLostContact:
 			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
+		execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], int(time.time()) - 604800])
+		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", int(time.time())])
 
 #
 # Connection from Healthstone clients
@@ -152,8 +158,11 @@ if query.getvalue("output") and query.getvalue("name"):
 	found = False
 	rows = queryDB("SELECT * FROM systems WHERE name = ?", [query.getvalue("name")])
 	for row in rows:
-		if row[4] == 0 and alarm == 1 and NotifyOnAlarms:
-			notify("Alarms raised on " + row[1], query.getvalue("output"))
+		if row[4] == 0 and alarm == 1:
+			if NotifyOnAlarms:
+				notify("Alarms raised on " + row[1], query.getvalue("output"))
+			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], int(time.time()) - 604800])
+			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], query.getvalue("output"), int(time.time())])
 		found = True
 	if found:
 		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, query.getvalue("output"), now, os.environ["REMOTE_ADDR"], query.getvalue("name")])
@@ -213,6 +222,18 @@ else: # Logged in
 				if i < len(cpus):
 					print(",")
 			print("] }]}; var ctx0 = document.getElementById('cpu').getContext('2d'); new Chart(ctx0).Line(data);</script>") 
+			print("<br><h4>Last events</h4><table class='table table-striped'>")
+			rows = queryDB("SELECT * FROM log WHERE name = ? LIMIT 50", [query.getvalue("name")])
+			for row in rows:
+				print("<tr><th>")
+				if int(row[0]) == 2:
+					print("<i class='fa fa-exclamation-triangle'></i>")
+				elif int(row[0]) == 1:
+					print("<i class='fa fa-question-circle'></i>")
+				else:
+					print("<i class='fa fa-info'></i>")
+				print("</th><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[3])) + "</td><td>" + str(row[2]).replace("\n"," ") + "</td></tr>")
+			print("</table>")
 			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 	else: # list of systems
 		print("<table class='table table-striped'><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr>")
