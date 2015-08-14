@@ -42,6 +42,7 @@ import smtplib
 from email.mime.text import MIMEText
 VERSION = "1.0.9"
 query = cgi.FieldStorage()
+now = int(time.time())
 login = False
 
 #
@@ -137,8 +138,8 @@ for row in rows:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		if NotifyOnLostContact:
 			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
-		execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], int(time.time()) - 604800])
-		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", int(time.time())])
+		execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
+		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
 
 #
 # Connection from Healthstone clients
@@ -147,7 +148,6 @@ if query.getvalue("output") and query.getvalue("name"):
 	cpu = 0
 	alarm = 1
 	interval = 300
-	now = int(time.time())
 	if query.getvalue("cpu"):
 		cpu = int(float(query.getvalue("cpu")))
 	if query.getvalue("alarms"):
@@ -161,15 +161,18 @@ if query.getvalue("output") and query.getvalue("name"):
 		if row[4] == 0 and alarm == 1:
 			if NotifyOnAlarms:
 				notify("Alarms raised on " + row[1], query.getvalue("output"))
-			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], int(time.time()) - 604800])
-			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], query.getvalue("output"), int(time.time())])
+			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
+			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], query.getvalue("output"), now])
 		found = True
 	if found:
 		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, query.getvalue("output"), now, os.environ["REMOTE_ADDR"], query.getvalue("name")])
 	else:
 		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], query.getvalue("name"), cpu, interval, alarm, query.getvalue("output"), now])
 	execDB("INSERT INTO history VALUES (?, ?, ?)", [query.getvalue("name"), cpu, now])
-	execDB("DELETE FROM history WHERE name = ? AND time < ?", [query.getvalue("name"), now - (50 * interval)])	
+	execDB("DELETE FROM history WHERE name = ? AND time < ?", [query.getvalue("name"), now - (50 * interval)])
+	rows = queryDB("SELECT FROM lostcontact WHERE name = ?", [query.getvalue("name")])
+	for row in rows:
+		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, row[1], "Contact restored with host.", now])		
 	execDB("DELETE FROM lostcontact WHERE name = ?", [query.getvalue("name")])
 	print("OK")
 	db.close()
@@ -223,16 +226,16 @@ else: # Logged in
 					print(",")
 			print("] }]}; var ctx0 = document.getElementById('cpu').getContext('2d'); new Chart(ctx0).Line(data);</script>") 
 			print("<br><h4>Last events</h4><table class='table table-striped'>")
-			rows = queryDB("SELECT * FROM log WHERE name = ? LIMIT 50", [query.getvalue("name")])
-			for row in rows:
+			rows2 = queryDB("SELECT * FROM log WHERE name = ? LIMIT 50", [query.getvalue("name")])
+			for row2 in rows2:
 				print("<tr><th>")
-				if int(row[0]) == 2:
+				if int(row2[0]) == 2:
 					print("<i class='fa fa-exclamation-triangle'></i>")
-				elif int(row[0]) == 1:
+				elif int(row2[0]) == 1:
 					print("<i class='fa fa-question-circle'></i>")
 				else:
 					print("<i class='fa fa-info'></i>")
-				print("</th><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[3])) + "</td><td>" + str(row[2]).replace("\n"," ") + "</td></tr>")
+				print("</th><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row2[3])) + "</td><td>" + str(row2[2]).replace("\n"," ") + "</td></tr>")
 			print("</table>")
 			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 	else: # list of systems
