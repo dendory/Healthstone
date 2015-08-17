@@ -26,7 +26,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2015 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.0.8.0")]
+[assembly: AssemblyFileVersion("1.0.9.0")]
 
 namespace Healthstone
 {

@@ -170,9 +170,9 @@ if query.getvalue("output") and query.getvalue("name"):
 		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], query.getvalue("name"), cpu, interval, alarm, query.getvalue("output"), now])
 	execDB("INSERT INTO history VALUES (?, ?, ?)", [query.getvalue("name"), cpu, now])
 	execDB("DELETE FROM history WHERE name = ? AND time < ?", [query.getvalue("name"), now - (50 * interval)])
-	rows = queryDB("SELECT FROM lostcontact WHERE name = ?", [query.getvalue("name")])
+	rows = queryDB("SELECT * FROM lostcontact WHERE name = ?", [query.getvalue("name")])
 	for row in rows:
-		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, row[1], "Contact restored with host.", now])		
+		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, query.getvalue("name"), "Contact restored with host.", now])		
 	execDB("DELETE FROM lostcontact WHERE name = ?", [query.getvalue("name")])
 	print("OK")
 	db.close()
@@ -226,7 +226,7 @@ else: # Logged in
 					print(",")
 			print("] }]}; var ctx0 = document.getElementById('cpu').getContext('2d'); new Chart(ctx0).Line(data);</script>") 
 			print("<br><h4>Last events</h4><table class='table table-striped'>")
-			rows2 = queryDB("SELECT * FROM log WHERE name = ? LIMIT 50", [query.getvalue("name")])
+			rows2 = queryDB("SELECT * FROM log WHERE name = ? ORDER BY time DESC LIMIT 50", [query.getvalue("name")])
 			for row2 in rows2:
 				print("<tr><th>")
 				if int(row2[0]) == 2:
