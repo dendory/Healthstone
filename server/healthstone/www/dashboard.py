@@ -230,11 +230,11 @@ else: # Logged in
 			for row2 in rows2:
 				print("<tr><th>")
 				if int(row2[0]) == 2:
-					print("<i class='fa fa-exclamation-triangle'></i>")
+					print("<center><i class='fa fa-exclamation-triangle'></i></center>")
 				elif int(row2[0]) == 1:
-					print("<i class='fa fa-question-circle'></i>")
+					print("<center><i class='fa fa-question-circle'></i></center>")
 				else:
-					print("<i class='fa fa-info'></i>")
+					print("<center><i class='fa fa-info'></i></center>")
 				print("</th><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row2[3])) + "</td><td>" + str(row2[2]).replace("\n"," ") + "</td></tr>")
 			print("</table>")
 			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
