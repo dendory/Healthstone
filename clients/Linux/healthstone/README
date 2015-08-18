@@ -7,7 +7,11 @@ Requirements:
 
 Installation:
 - Copy the files to the host you wish to monitor or an accessible network location
-- Edit 'healthstone.py' and enter the URL of your dashboard
-- Run 'chmod +x install.sh; sudo ./install.sh' to install the script on the local system
+- Edit 'healthstone.py' and configure the checks and notification settings
+- Run 'sudo ./install.sh' to install the script on the local system
+
+Crontab notes:
+- The install script defaults to adding a 5 minutes crontab for running Healthstone. If you modify the interval value in healthstone.py you should modify that value in the install script as well
+- You should remove the old crontab entry if you run the install script more than once
 
 (C) 2015 Patrick Lambert - http://healthstone.ca

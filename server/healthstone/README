@@ -6,8 +6,8 @@ Requirements:
 - IIS or Apache web server with CGI and ISAPI support
 
 Installation:
-- Download 'healthstone-server.zip' onto your server and unzip it where you want the files to live, for example 'C:\healthstone'.
-- Edit 'dashboard.py' and configure the access code and notification settings.
+- Download 'healthstone-server.zip' onto your server and unzip it where you want the files to live, for example 'C:\healthstone'
+- Edit 'dashboard.py' and configure the access code and notification settings
 - Run 'setup.bat' on Windows or link the the 'www' folder to an accessible location (for example, make a virtual site from http://localhost/healthstone pointing to that folder) on Linux, making sure the Python script has write access to '../db/'
 
 Troubleshooting:

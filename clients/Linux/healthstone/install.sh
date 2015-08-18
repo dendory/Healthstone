@@ -3,4 +3,4 @@ chmod +x /usr/bin/healthstone.py
 crontab -l > mycron
 echo "*/5 * * * * python3 /usr/bin/healthstone.py" >> mycron
 crontab mycron
-rm mycron
+rm -f mycron

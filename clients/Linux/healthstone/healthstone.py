@@ -5,11 +5,14 @@
 # BEGIN CONFIGURATION
 #
 
-# Interval (in seconds) configured in crontab between runs [number]
+# Interval (in seconds) configured in your crontab between runs [number]
 Interval = 300
 
 # Check for acceptable CPU threshold [number|False]
 CheckCPU = 90
+
+# Check if a specific process is running [process name|False]
+CheckProcess = False
 
 # Notify a Healthstone dashboard [url|False]
 NotifyDashboardURL = "http://localhost/healthstone"
@@ -31,16 +34,17 @@ import subprocess
 import urllib.request
 import urllib.parse
 import time
-VERSION = "1.0.8"
+import os
+VERSION = "1.0.9"
 
 #
 # Gather system data
 #
 hostname = subprocess.check_output(["hostname"]).decode("utf-8").upper().rstrip('\n')
-os = subprocess.check_output(["uname", "-srv"]).decode("utf-8").rstrip('\n')
+osys = subprocess.check_output(["uname", "-srv"]).decode("utf-8").rstrip('\n')
 arch = subprocess.check_output(["uname", "-i"]).decode("utf-8").rstrip('\n')
 uptime = subprocess.check_output(["uptime"]).decode("utf-8").rstrip('\n')
-output = "Healthstone checks: " + hostname + " - " + os + " (" + arch + ")\n\n" + uptime 
+output = "Healthstone checks: " + hostname + " - " + osys + " (" + arch + ")\n\n" + uptime + "\n\n"
 (tmp1, tmp2) = uptime.split(': ')
 cpu = int(float(tmp2.split(',')[0]))
 
@@ -51,6 +55,12 @@ alarms = False
 if CheckCPU:
 	if cpu > CheckCPU:
 		alarms = True
+		output += "CPU utilization above set threshold: " + str(CheckCPU) + "\n"
+if CheckProcess:
+	ps = os.popen("ps -Af").read()
+	if ps.count(CheckProcess) < 1:
+		alarms = True
+		output += "Process is not running: " + CheckProcess + "\n"
 
 #
 # Send results off
