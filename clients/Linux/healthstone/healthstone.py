@@ -14,6 +14,9 @@ CheckCPU = 90
 # Check if a specific process is running [process name|False]
 CheckProcess = False
 
+# Check if used disk space is above x percent [number|False]
+CheckDiskSpace = 90
+
 # Notify a Healthstone dashboard [url|False]
 NotifyDashboardURL = "http://localhost/healthstone"
 
@@ -61,6 +64,15 @@ if CheckProcess:
 	if ps.count(CheckProcess) < 1:
 		alarms = True
 		output += "Process is not running: " + CheckProcess + "\n"
+if CheckDiskSpace:
+	df = os.popen("df").read()
+	for line in df.splitlines():
+		tmp = line.split(' ')
+		tmp2 = [x for x in tmp if x]
+		freespace = str(tmp2[4]).replace('%','')
+		if freespace.isdigit() and int(freespace) > CheckDiskSpace:
+			alarms = True
+			output += "Disk space threshold exceeded: " + tmp2[0] + " (" + freespace + "%)\n"
 
 #
 # Send results off
