@@ -13,5 +13,6 @@ Installation:
 Crontab notes:
 - The install script defaults to adding a 5 minutes crontab for running Healthstone. If you modify the interval value in healthstone.py you should modify that value in the install script as well
 - You should remove the old crontab entry if you run the install script more than once
+- If your Python 3.x installation is not in your PATH or at /usr/bin/python3 then you may have to edit the crontab
 
 (C) 2015 Patrick Lambert - http://healthstone.ca
