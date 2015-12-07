@@ -38,7 +38,7 @@ import urllib.request
 import urllib.parse
 import time
 import os
-VERSION = "1.0.9"
+VERSION = "1.1.0"
 
 #
 # Gather system data
