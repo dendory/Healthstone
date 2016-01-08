@@ -37,6 +37,7 @@ namespace Healthstone
 		public string output;
 		public bool alarms;
 		public WebClient wc;
+		public WebProxy wp;
 		public ManagementObjectSearcher wmi;
 		public RegistryKey rkey;
 		public PerformanceCounter cpu;
@@ -685,12 +686,15 @@ namespace Healthstone
 			// Footers
 			if(alarms == false) output += "No check failed.";
 			output += cfg["CustomText"];
+			if(CfgValue("NotifyProxy")) wp = new WebProxy(cfg["NotifyProxy"]);
+
 			// Healthstone dashboard
 			if(CfgValue("NotifyHealthstoneDashboard"))
 			{
 				try
 				{
 					wc = new WebClient();
+					wc.Proxy = wp;
 					wc.QueryString.Add("alarms", alarms.ToString());
 					wc.QueryString.Add("cpu", curval.ToString());
 					wc.QueryString.Add("name", Environment.MachineName);
@@ -712,6 +716,7 @@ namespace Healthstone
 					try
 					{
 						wc = new WebClient();
+						wc.Proxy = wp;
 						wc.QueryString.Add("api", "add_ticket");
 						wc.QueryString.Add("key", cfg["NotifyNodePointKey"]);
 						wc.QueryString.Add("product_id", cfg["NotifyNodePointProduct"]);
@@ -732,6 +737,7 @@ namespace Healthstone
 					try
 					{
 						wc = new WebClient();
+						wc.Proxy = wp;
 						wc.Credentials = new NetworkCredential(cfg["NotifyPushbulletKey"], "");
 						byte[] response = wc.UploadValues("https://api.pushbullet.com/v2/pushes", new NameValueCollection()
 						{
@@ -797,6 +803,7 @@ namespace Healthstone
 						string signature = Convert.ToBase64String(hmac.ComputeHash(encoding.GetBytes(tosign)));
 						query += "&Signature=" + Uri.EscapeDataString(signature);
 						wc = new WebClient();
+						wc.Proxy = wp;
 						string result = wc.DownloadString("https://sns." + cfg["NotifyAWSRegion"] + ".amazonaws.com/?" + query);
 						if(CfgValue("NotifyDebug")) { output += "SNS notification sent: " + result; }
 					}
