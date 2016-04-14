@@ -63,7 +63,7 @@
 {\Large Patrick Lambert}\\
 \texttt{\url{http://healthstone.ca}}\\
 \bigskip
-v1.1.0}
+v1.2.0}
 \vspace*{\fill}
 \end{center}
 \end{titlepage}
@@ -90,7 +90,7 @@ Along with the service file and configuration file, an installation batch script
 
 \subsection{Installation}
 
-The client component can run on any 64 bits Windows host and requires Microsoft .NET Framework 3.5 to be installed.
+The client component can run on any 64 bits Windows host and requires Microsoft .NET Framework 4.5 to be installed.
 
 \begin{enumerate}
 \item Download ans extract \texttt{healthstone-client-win64.zip} onto each host you want to monitor, or to a central accessible network location.
@@ -122,6 +122,10 @@ Configuration for the Windows service is done in the \texttt{heaslthstone.cfg} f
 \texttt{RaiseQueryFailures: false}
 \item Log debug information about notifications, used to troubleshoot failed notifications. [true|false]\\
 \texttt{NotifyDebug: false}
+\item Use a proxy server for web based notifications. [url|false]\\
+\texttt{NotifyProxy: false}
+\item Set to true if you're having issues connecting to SSL servers. [true|false]\\
+\texttt{NotifySSL: false}
 \item Address of a Healthstone dashboard. [url|false]\\
 \texttt{NotifyHealthstoneDashboard: false}
 \item File a NodePoint ticket. [true|false]\\
@@ -227,7 +231,7 @@ Like the Windows version, it can be run by itself, configured to notify you when
 The client component can run on any Linux host and requires Python 3.x to be installed.
 
 \begin{enumerate}
-\item Download and extract \texttt{healthstone-client-linux.zip} onto each host you want to monitor, or to a central accessible network location.
+\item Download and extract \texttt{healthstone-client-linux.tar} onto each host you want to monitor, or to a central accessible network location.
 \item Edit \texttt{healthstone.py} and customize the checks you want to run.
 \item Run \texttt{sudo ./install.sh} to install the script on the local system.
 \end{enumerate}

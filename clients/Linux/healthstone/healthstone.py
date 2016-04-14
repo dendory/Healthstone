@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
 
 #
@@ -38,7 +38,7 @@ import urllib.request
 import urllib.parse
 import time
 import os
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 #
 # Gather system data

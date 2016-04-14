@@ -7,7 +7,7 @@
 \contentsline {section}{\numberline {3}Linux client}{6}{section.3}
 \contentsline {subsection}{\numberline {3.1}Installation}{6}{subsection.3.1}
 \contentsline {subsection}{\numberline {3.2}Troubleshooting}{6}{subsection.3.2}
-\contentsline {subsection}{\numberline {3.3}Configuration}{6}{subsection.3.3}
+\contentsline {subsection}{\numberline {3.3}Configuration}{7}{subsection.3.3}
 \contentsline {section}{\numberline {4}Dashboard}{7}{section.4}
 \contentsline {subsection}{\numberline {4.1}Installation}{7}{subsection.4.1}
 \contentsline {subsection}{\numberline {4.2}Troubleshooting}{8}{subsection.4.2}
