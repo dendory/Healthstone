@@ -48,7 +48,6 @@ login = False
 #
 # Headers
 #
-print("HTTP/1.0 200 OK")
 if query.getvalue("output") and query.getvalue("name"):
 	print("Content-Type: text/plain; charset=utf-8")	
 else:
