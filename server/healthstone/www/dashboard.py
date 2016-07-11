@@ -238,7 +238,7 @@ else: # Logged in
 			print("</table>")
 			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 	else: # list of systems
-		print("<table class='table table-striped'><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr>")
+		print("<table class='table table-striped' id='systems'><thead><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr></thead><tbody>")
 		rows = queryDB("SELECT * FROM systems ORDER BY time DESC", [])
 		for row in rows:
 			print("<tr>")
@@ -256,7 +256,7 @@ else: # Logged in
 			else:
 				print("btn-success' value='Ok'>")
 			print("</form></td></tr>")	
-		print("</table>")	
+		print("</tbody></table><script>$(document).ready(function(){$('#systems').DataTable({'order':[[4,'desc']]});});</script>")	
 f = open("bottom.html", "r")
 for line in f:
 	print(line.replace("##VERSION##", VERSION))
