@@ -17,6 +17,9 @@ CheckProcess = False
 # Check if used disk space is above x percent [number|False]
 CheckDiskSpace = 90
 
+# Check if a local user is missing [user|False]
+CheckUser = False
+
 # Notify a Healthstone dashboard [url|False]
 NotifyDashboardURL = "http://localhost/healthstone"
 
@@ -38,7 +41,7 @@ import urllib.request
 import urllib.parse
 import time
 import os
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 #
 # Gather system data
@@ -47,7 +50,9 @@ hostname = subprocess.check_output(["hostname"]).decode("utf-8").upper().rstrip(
 osys = subprocess.check_output(["uname", "-srv"]).decode("utf-8").rstrip('\n')
 arch = subprocess.check_output(["uname", "-i"]).decode("utf-8").rstrip('\n')
 uptime = subprocess.check_output(["uptime"]).decode("utf-8").rstrip('\n')
-output = "Healthstone checks: " + hostname + " - " + osys + " (" + arch + ")\n\n" + uptime + "\n\n"
+localusers = os.popen("grep -v -e 'nologin' -e 'halt' -e 'sync' -e 'shutdown' /etc/passwd | cut -d: -f1 | tr '\n' ' '").read()
+diskspace = os.popen("df -h").read()
+output = "Healthstone checks: " + hostname + " - " + osys + " (" + arch + ")\n\n" + uptime + "\n\nLocal users: " + localusers + "\n\nDisk space:\n" + diskspace + "\n\n"
 (tmp1, tmp2) = uptime.split(': ')
 cpu = int(float(tmp2.split(',')[0]))
 
@@ -59,6 +64,10 @@ if CheckCPU:
 	if cpu > CheckCPU:
 		alarms = True
 		output += "CPU utilization above set threshold: " + str(CheckCPU) + "\n"
+if CheckUser:
+	if CheckUser not in localusers:
+		alarms = True
+		output += "User missing: " + CheckUser + "\n"
 if CheckProcess:
 	ps = os.popen("ps -Af").read()
 	if ps.count(CheckProcess) < 1:

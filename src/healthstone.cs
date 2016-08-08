@@ -22,11 +22,12 @@ using System.Net.Sockets;
 using System.Data.Odbc;
 using System.Text;
 using System.Security.Cryptography;
+using System.Linq;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2016 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.1.0")]
 
 namespace Healthstone
 {
@@ -42,7 +43,8 @@ namespace Healthstone
 		public RegistryKey rkey;
 		public PerformanceCounter cpu;
 		public int port;
-		
+		public string localusers;
+
 		public Program() // Setting service name
         {
             this.ServiceName = "Healthstone";
@@ -679,6 +681,35 @@ namespace Healthstone
 				if(CfgValue("RaiseQueryFailures"))
 				{
 					output += "Time checks: NTP query failure: " + e + "\n";
+					alarms = true;				
+				}
+			}
+
+			try // local users
+			{
+				string localusers = "";
+				ManagementObjectSearcher usersSearcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_UserAccount");
+				ManagementObjectCollection users = usersSearcher.Get();
+				var lUsers = users.Cast<ManagementObject>().Where(u => (bool)u["LocalAccount"] == true && (bool)u["Disabled"] == false);
+				foreach (ManagementObject user in lUsers)
+				{
+					localusers += user["Caption"].ToString() + " ";
+				}
+				if(CfgValue("CheckUser"))
+				{
+					if(localusers.IndexOf(cfg["CheckUser"]) == -1)
+					{
+						output += "User is missing: " + cfg["CheckUser"] + "\n";
+						alarms = true; 
+					}
+				}
+				if(CfgValue("Verbose")) { output += "Local users: " + localusers + "\n"; }
+			}
+			catch (Exception e)
+			{
+				if(CfgValue("RaiseQueryFailures"))
+				{
+					output += "Listing local users failed: " + e + "\n";
 					alarms = true;				
 				}
 			}

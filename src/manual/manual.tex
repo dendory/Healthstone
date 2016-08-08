@@ -63,7 +63,7 @@
 {\Large Patrick Lambert}\\
 \texttt{\url{http://healthstone.ca}}\\
 \bigskip
-v1.2.0}
+v1.2.1}
 \vspace*{\fill}
 \end{center}
 \end{titlepage}
@@ -218,6 +218,8 @@ Configuration for the Windows service is done in the \texttt{heaslthstone.cfg} f
 \texttt{CheckCustomPort: false}
 \item Check if the time is in sync (<5mins) with this NTP server. [server|false]\\
 \texttt{CheckTime: false}
+\item Check if a local user exists. [user|false]\\
+\texttt{CheckUser: false}
 \end{itemize}
 
 \section{Linux client}
@@ -255,6 +257,8 @@ Configuration for the Linux client is done at the top of the \texttt{healthstone
 \texttt{CheckProcess = False}
 \item Check if used disk space is above x percent [number|False]\\
 \texttt{CheckDiskSpace = 90}
+\item Check if a local user exists [user|False]\\
+\texttt{CheckUser = False}
 \item Notify a Healthstone dashboard [url|False]\\
 \texttt{NotifyDashboardURL = "http://localhost/healthstone"}
 \item Write alarms to a log file [filename|False]\\
@@ -318,7 +322,6 @@ Healthstone is provided as a free open source solution. The source code is avail
 
 Should you have questions or comments, feel free to contact the author at \texttt{dendory@live.ca}.
 
-\clearpage
 \section{License}
 The MIT License (MIT)
 

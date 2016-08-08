@@ -40,7 +40,7 @@ import urllib.request
 import urllib.parse
 import smtplib
 from email.mime.text import MIMEText
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
