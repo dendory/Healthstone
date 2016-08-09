@@ -63,7 +63,7 @@
 {\Large Patrick Lambert}\\
 \texttt{\url{http://healthstone.ca}}\\
 \bigskip
-v1.2.1}
+v1.2.2}
 \vspace*{\fill}
 \end{center}
 \end{titlepage}
@@ -257,8 +257,14 @@ Configuration for the Linux client is done at the top of the \texttt{healthstone
 \texttt{CheckProcess = False}
 \item Check if used disk space is above x percent [number|False]\\
 \texttt{CheckDiskSpace = 90}
+\item Check if free memory is above x percent [number|False]\\
+\texttt{CheckMemory = 90}
+\item Check if system rebooted in the last day [True|False]\\
+\texttt{CheckReboot = False}
 \item Check if a local user exists [user|False]\\
 \texttt{CheckUser = False}
+\item Check if a URL is returning success or an error [url|False]\\
+\texttt{CheckURL = False}
 \item Notify a Healthstone dashboard [url|False]\\
 \texttt{NotifyDashboardURL = "http://localhost/healthstone"}
 \item Write alarms to a log file [filename|False]\\

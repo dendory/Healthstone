@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2016 Patrick Lambert - http://healthstone.ca
 
 #
 # BEGIN CONFIGURATION
@@ -20,8 +20,17 @@ CheckDiskSpace = 90
 # Check if a local user is missing [user|False]
 CheckUser = False
 
+# Check if free memory is above x percent [number|False]
+CheckMemory = 90
+
+# Check if system rebooted in the last day [True|False]
+CheckReboot = False
+
+# Check if a URL is returning success or an error [url|False]
+CheckURL = False
+
 # Notify a Healthstone dashboard [url|False]
-NotifyDashboardURL = "http://localhost/healthstone"
+NotifyDashboardURL = "https://localhost/healthstone"
 
 # Write alarms to a log file [filename|False]
 NotifyFile = False
@@ -41,7 +50,7 @@ import urllib.request
 import urllib.parse
 import time
 import os
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 #
 # Gather system data
@@ -50,8 +59,10 @@ hostname = subprocess.check_output(["hostname"]).decode("utf-8").upper().rstrip(
 osys = subprocess.check_output(["uname", "-srv"]).decode("utf-8").rstrip('\n')
 arch = subprocess.check_output(["uname", "-i"]).decode("utf-8").rstrip('\n')
 uptime = subprocess.check_output(["uptime"]).decode("utf-8").rstrip('\n')
-localusers = os.popen("grep -v -e 'nologin' -e 'halt' -e 'sync' -e 'shutdown' /etc/passwd | cut -d: -f1 | tr '\n' ' '").read()
+freememory = float(os.popen("free | grep Mem | awk '{print $3/$2 * 100.0}'").read().rstrip('\n'))
+localusers = os.popen("grep -v -e 'false' -e 'nologin' -e 'halt' -e 'sync' -e 'shutdown' /etc/passwd | cut -d: -f1 | tr '\n' ' '").read()
 diskspace = os.popen("df -h").read()
+updays = os.popen("uptime | cut -d' ' -f5").read().rstrip('\n')
 output = "Healthstone checks: " + hostname + " - " + osys + " (" + arch + ")\n\n" + uptime + "\n\nLocal users: " + localusers + "\n\nDisk space:\n" + diskspace + "\n\n"
 (tmp1, tmp2) = uptime.split(': ')
 cpu = int(float(tmp2.split(',')[0]))
@@ -63,7 +74,11 @@ alarms = False
 if CheckCPU:
 	if cpu > CheckCPU:
 		alarms = True
-		output += "CPU utilization above set threshold: " + str(CheckCPU) + "\n"
+		output += "CPU utilization above set threshold: " + str(cpu) + "%\n"
+if CheckMemory:
+	if freememory > CheckMemory:
+		alarms = True
+		output += "Memory utilization above set threshold: " + str(freememory) + "%\n"
 if CheckUser:
 	if CheckUser not in localusers:
 		alarms = True
@@ -82,6 +97,19 @@ if CheckDiskSpace:
 		if freespace.isdigit() and int(freespace) > CheckDiskSpace:
 			alarms = True
 			output += "Disk space threshold exceeded: " + tmp2[0] + " (" + freespace + "%)\n"
+if CheckReboot:
+	if updays != "days" and updays != "day" and updays != "days," and updays != "day,":
+		alarms = True
+		output += "System reboot detected.\n"
+if CheckURL:
+	try:
+		con = urllib.request.urlopen(CheckURL)
+		if con.getcode() != 200:
+			alarms = True
+			output += "The URL " + CheckURL + " returned HTTP code: " + str(con.getcode()) + "\n"
+	except:
+		alarms = True
+		output += "Could not connect to URL " + CheckURL + "\n"
 
 #
 # Send results off

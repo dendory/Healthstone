@@ -1,5 +1,5 @@
 //
-// Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
+// Healthstone System Monitor - (C) 2016 Patrick Lambert - http://healthstone.ca
 //
 
 using System;
@@ -27,7 +27,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2016 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.2.1.0")]
+[assembly: AssemblyFileVersion("1.2.2.0")]
 
 namespace Healthstone
 {

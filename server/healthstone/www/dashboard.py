@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2016 Patrick Lambert - http://healthstone.ca
 
 #
 # BEGIN CONFIGURATION

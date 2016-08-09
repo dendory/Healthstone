@@ -9,8 +9,8 @@
 \contentsline {subsection}{\numberline {3.2}Troubleshooting}{6}{subsection.3.2}
 \contentsline {subsection}{\numberline {3.3}Configuration}{7}{subsection.3.3}
 \contentsline {section}{\numberline {4}Dashboard}{7}{section.4}
-\contentsline {subsection}{\numberline {4.1}Installation}{7}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.1}Installation}{8}{subsection.4.1}
 \contentsline {subsection}{\numberline {4.2}Troubleshooting}{8}{subsection.4.2}
 \contentsline {subsection}{\numberline {4.3}Configuration}{8}{subsection.4.3}
-\contentsline {section}{\numberline {5}Conclusion}{8}{section.5}
+\contentsline {section}{\numberline {5}Conclusion}{9}{section.5}
 \contentsline {section}{\numberline {6}License}{9}{section.6}
