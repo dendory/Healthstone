@@ -39,11 +39,15 @@ import os
 import urllib.request
 import urllib.parse
 import smtplib
+import hashlib
 from email.mime.text import MIMEText
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
+
+def sha256(msg):
+    return hashlib.sha256(str.encode(msg)).hexdigest()
 
 #
 # Headers
@@ -54,14 +58,14 @@ else:
 	print("Content-Type: text/html; charset=utf-8")
 if query.getvalue("ac"): # Login from form
 	if query.getvalue("ac") == AccessCode:
-		print("Set-Cookie: ac=" + AccessCode)
+		print("Set-Cookie: ac=" + sha256(AccessCode))
 		login = True
 if 'HTTP_COOKIE' in os.environ: # Login from cookies
 	cookies = os.environ['HTTP_COOKIE']
 	cookies = cookies.split('; ')
 	for cookie in cookies:
 		cookie = cookie.split('=')
-		if cookie[0] == 'ac' and cookie[1] == AccessCode:
+		if cookie[0] == 'ac' and cookie[1] == sha256(AccessCode):
 			login = True
 print()
 
@@ -155,24 +159,24 @@ if query.getvalue("output") and query.getvalue("name"):
 	if query.getvalue("interval"):
 		interval = int(query.getvalue("interval"))
 	found = False
-	rows = queryDB("SELECT * FROM systems WHERE name = ?", [query.getvalue("name")])
+	rows = queryDB("SELECT * FROM systems WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	for row in rows:
 		if row[4] == 0 and alarm == 1:
 			if NotifyOnAlarms:
-				notify("Alarms raised on " + row[1], query.getvalue("output"))
+				notify("Alarms raised on " + row[1], cgi.escape(query.getvalue("output")))
 			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
-			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], query.getvalue("output"), now])
+			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], cgi.escape(query.getvalue("output")), now])
 		found = True
 	if found:
-		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, query.getvalue("output"), now, os.environ["REMOTE_ADDR"], query.getvalue("name")])
+		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, cgi.escape(query.getvalue("output")), now, os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name"))])
 	else:
-		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], query.getvalue("name"), cpu, interval, alarm, query.getvalue("output"), now])
-	execDB("INSERT INTO history VALUES (?, ?, ?)", [query.getvalue("name"), cpu, now])
-	execDB("DELETE FROM history WHERE name = ? AND time < ?", [query.getvalue("name"), now - (50 * interval)])
-	rows = queryDB("SELECT * FROM lostcontact WHERE name = ?", [query.getvalue("name")])
+		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name")), cpu, interval, alarm, cgi.escape(query.getvalue("output")), now])
+	execDB("INSERT INTO history VALUES (?, ?, ?)", [cgi.escape(query.getvalue("name")), cpu, now])
+	execDB("DELETE FROM history WHERE name = ? AND time < ?", [cgi.escape(query.getvalue("name")), now - (50 * interval)])
+	rows = queryDB("SELECT * FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	for row in rows:
-		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, query.getvalue("name"), "Contact restored with host.", now])		
-	execDB("DELETE FROM lostcontact WHERE name = ?", [query.getvalue("name")])
+		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, cgi.escape(query.getvalue("name")), "Contact restored with host.", now])		
+	execDB("DELETE FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	print("OK")
 	db.close()
 	quit(0)
