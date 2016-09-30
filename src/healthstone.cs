@@ -24,10 +24,11 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Linq;
 using Microsoft.Win32;
+using System.Runtime.Serialization.Json;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2016 Patrick Lambert")]
-[assembly: AssemblyFileVersion("1.2.2.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
 
 namespace Healthstone
 {

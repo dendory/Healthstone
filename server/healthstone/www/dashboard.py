@@ -35,13 +35,14 @@ NotifySMTPTo = "you@example.com"
 import sqlite3
 import time
 import cgi
+import re
 import os
 import urllib.request
 import urllib.parse
 import smtplib
 import hashlib
 from email.mime.text import MIMEText
-VERSION = "1.2.2"
+VERSION = "2.0.0"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
@@ -177,7 +178,16 @@ if query.getvalue("output") and query.getvalue("name"):
 	for row in rows:
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, cgi.escape(query.getvalue("name")), "Contact restored with host.", now])		
 	execDB("DELETE FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
-	print("OK")
+	if query.getvalue("template"):
+		try:
+			f = open("../templates/" + re.sub(r'\W+', '', str(query.getvalue("template"))) + ".json", "r")
+			for line in f:
+				print(line)
+			f.close()
+		except:
+			print("OK")
+	else:
+		print("OK")
 	db.close()
 	quit(0)
 

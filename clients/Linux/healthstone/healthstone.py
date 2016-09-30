@@ -50,7 +50,7 @@ import urllib.request
 import urllib.parse
 import time
 import os
-VERSION = "1.2.2"
+VERSION = "2.0.0"
 
 #
 # Gather system data
