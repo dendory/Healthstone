@@ -8,6 +8,9 @@
 # Access code to access the dashboard [string]
 AccessCode = "1234"
 
+# Delete log entries after a week [True|False]
+DeleteOldEntries = False
+
 # Send notifications for systems that lose contacts [True|False]
 NotifyOnLostContact = True
 
@@ -142,11 +145,12 @@ for row in rows:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		if NotifyOnLostContact:
 			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
-		execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
+		if DeleteOldEntries:
+			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
 
 #
-# Connection from Healthstone clients
+# Connection from Healthstone agents
 #
 if query.getvalue("output") and query.getvalue("name"):
 	cpu = 0
@@ -155,7 +159,7 @@ if query.getvalue("output") and query.getvalue("name"):
 	if query.getvalue("cpu"):
 		cpu = int(float(query.getvalue("cpu")))
 	if query.getvalue("alarms"):
-		if query.getvalue("alarms").lower() == "false":
+		if query.getvalue("alarms").lower() == "false" or query.getvalue("alarms") == "0":
 			alarm = 0
 	if query.getvalue("interval"):
 		interval = int(query.getvalue("interval"))
@@ -165,13 +169,15 @@ if query.getvalue("output") and query.getvalue("name"):
 		if row[4] == 0 and alarm == 1:
 			if NotifyOnAlarms:
 				notify("Alarms raised on " + row[1], cgi.escape(query.getvalue("output")))
-			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
+			if DeleteOldEntries:
+				execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
 			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], cgi.escape(query.getvalue("output")), now])
 		found = True
 	if found:
 		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, cgi.escape(query.getvalue("output")), now, os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name"))])
 	else:
 		execDB("INSERT INTO systems VALUES (?, ?, ?, ?, ?, ?, ?)", [os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name")), cpu, interval, alarm, cgi.escape(query.getvalue("output")), now])
+		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, cgi.escape(query.getvalue("name")), "New host added.", now])
 	execDB("INSERT INTO history VALUES (?, ?, ?)", [cgi.escape(query.getvalue("name")), cpu, now])
 	execDB("DELETE FROM history WHERE name = ? AND time < ?", [cgi.escape(query.getvalue("name")), now - (50 * interval)])
 	rows = queryDB("SELECT * FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
@@ -180,12 +186,12 @@ if query.getvalue("output") and query.getvalue("name"):
 	execDB("DELETE FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	if query.getvalue("template"):
 		try:
-			f = open("../templates/" + re.sub(r'\W+', '', str(query.getvalue("template"))) + ".json", "r")
+			f = open("../templates/" + re.sub(r'\W+', '', str(query.getvalue("template"))) + ".template", "r")
 			for line in f:
 				print(line)
 			f.close()
 		except:
-			print("OK")
+			print("Invalid template requested.")
 	else:
 		print("OK")
 	db.close()
@@ -197,6 +203,7 @@ if query.getvalue("output") and query.getvalue("name"):
 f = open("top.html", "r")
 for line in f:
 	print(line.replace("##TIME##", time.strftime("%Y/%m/%d %H:%M:%S")))
+f.close()
 if not login: # Login form
 	print("<p><form method='POST' action='.'><div class='row text-center'><div class='col-md-3'></div><div class='col-md-6'><input type='password' class='form-control' name='ac' placeholder='Access code'><br><input type='submit' class='btn btn-primary' value='Login'></div></div><div class='col-md-3'></div></form></p>")
 else: # Logged in
@@ -239,7 +246,7 @@ else: # Logged in
 					print(",")
 			print("] }]}; var ctx0 = document.getElementById('cpu').getContext('2d'); new Chart(ctx0).Line(data);</script>") 
 			print("<br><h4>Last events</h4><table class='table table-striped'>")
-			rows2 = queryDB("SELECT * FROM log WHERE name = ? ORDER BY time DESC LIMIT 50", [query.getvalue("name")])
+			rows2 = queryDB("SELECT * FROM log WHERE name = ? ORDER BY time DESC LIMIT 200", [query.getvalue("name")])
 			for row2 in rows2:
 				print("<tr><th>")
 				if int(row2[0]) == 2:
@@ -274,4 +281,5 @@ else: # Logged in
 f = open("bottom.html", "r")
 for line in f:
 	print(line.replace("##VERSION##", VERSION))
+f.close()
 db.close()

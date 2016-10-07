@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="refresh" content="60">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Healthstone Monitoring System</title>
+		<link rel="shortcut icon"" href="favicon.ico">
+		<link href="bootstrap.css" rel="stylesheet">
+		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+		<script src="chart.js"></script>
+		<script src="//code.jquery.com/jquery-1.11.3.js"></script>
+		<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
+  		<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+	</head>
+	<body>
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="container topnav">
+				<div class="navbar-header">
+					<a class="navbar-brand topnav" href='./'>Healthstone dashboard</a>
+				</div>
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href='#'>Healthstone agents</a></li>
+					</ul>
+				</div>
+			</div>
+		</nav>
+		<div class="container">
+			<h3>Windows agent</h3>
+			<p>The Windows agent will run on any 64bit Windows host such as Windows 7, 8, 10, Server 2008, 2012 and 2016. Simply extract the <a href='healthstone-agent-win64.zip'>package</a> on the host itself or an accessible network location. The Microsoft .NET 4.0 Framework is required. The agent can be installed by running the following command from an Administrator command line:</p>
+			<p><code>install.bat http://127.0.0.1/healthstone default</code></p>
+			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. You can customize it to fit your needs. The installer will copy the binary to <i>%PROGRAMFILES%/healthstone</i>, add the proper entries to the Registry under <i>HKLM/Software/Healthstone</i> and start the service.</p>
+			<hr>
+			<h3>Linux agent</h3>
+			<p>The Linux agent will run on any modern Linux host. The only requirement is to have Python 3.x installed and available as <i>python3</i> on the system. Simply extract the <a href='healthstone-agent-linux.tar'>package</a> on the host itself or an accessible network location. The agent can be installed by running the following command:</p>
+			<p><code>sudo ./install.sh http://127.0.0.1/healthstone default</code></p>
+			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. You can customize it to fit your needs. The installer will copy the Python script and create a crontab entry to run the agent on a 5 minutes interval.</p>
+			<hr>
+		</div>
+	</body>
+</html>

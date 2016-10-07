@@ -1,0 +1,33 @@
+# This template provides configuration information for Healthstone agents
+# Only the [General] section is mandatory, but each section kept must have all its keys listed
+# Do not use quotes or multiple lines for key values
+# Templates are not saved on hosts, each agent will fetch its specific template on every poll
+# Template filenames must contain only alphanumeric characters and end with .template
+# The same template can be used for Windows and Linux agents
+
+[General]
+interval: 300		# Interval between polls in seconds (Windows only)
+verbose: true		# Verbose output
+debug: false  		# Log debug information in Event Viewer
+
+[CheckCPU]
+maximum: 90			# Percentage of CPU utilization
+
+[CheckMemory]
+minimum: 500		# Minimum amount of free memory required (MB)
+
+[CheckProcesses]
+maximum: 200		# Maximum number of processes that must be running
+minimum: 1			# Minimum number of processes that must be running
+include: 	 		# Space separated list of processes that must be running
+exclude: 	 		# Space separated list of processes that must NOT be running
+
+[CheckDiskSpace]
+minimum: 500		# Minimum amount of free space required on all local disks (MB)
+
+[CheckLUsers]
+include:   			# List of local users that must be enabled on the system
+exclude:			# List of local users that must NOT be enabled on the system
+
+[CheckUpdates]
+status: Automatic	# Updates must be set to "Automatic", "Disabled" or "Manual" (Windows only)
