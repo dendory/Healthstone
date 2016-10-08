@@ -24,7 +24,6 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Linq;
 using Microsoft.Win32;
-using System.Runtime.Serialization.Json;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2016 Patrick Lambert")]
@@ -196,7 +195,7 @@ namespace Healthstone
 				wmi = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem");
 				foreach(ManagementObject items in wmi.Get())
 				{
-					output += " - " + items["Caption"] + " (" +  items["OSArchitecture"] + ") - " + cfg["general"]["template"];
+					output += " - " + items["Caption"] + " (" +  items["OSArchitecture"] + ")";
 				}
 			}
 			catch (Exception e)
@@ -204,7 +203,7 @@ namespace Healthstone
 				output += " - " + e;
 				alarms += 1;
 			}
-			output += "\n\n";
+			output += " - " + cfg["general"]["template"] + "\n\n";
 
 			// Checks
 			if(cfg.ContainsKey("checkcpu"))  // check cpu load
