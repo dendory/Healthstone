@@ -15,10 +15,9 @@ fi
 
 cp healthstone.py /usr/bin/healthstone.py
 chmod +x /usr/bin/healthstone.py
-crontab -l > /tmp/mycron
-if ! grep -q healthstone /tmp/mycron; then
-        echo "*/5 * * * * /usr/bin/healthstone.py $dashboard $template" >> /tmp/mycron
-        crontab /tmp/mycron
+if ! grep -q healthstone /etc/rc.local; then
+        echo "/usr/bin/healthstone.py $dashboard $template >> /var/log/healthstone.log 2>&1 &" >> /etc/rc.local
+        chmod +x /etc/rc.local
 fi
-rm -f /tmp/mycron
-echo "Installation done. The server will connect to $dashboard in 30 seconds to fetch its configuration."
+echo "Installation done. The agent will connect to $dashboard shortly to fetch its configuration."
+/usr/bin/healthstone.py $dashboard $template >> /var/log/healthstone.log 2>&1 &

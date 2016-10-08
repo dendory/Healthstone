@@ -31,12 +31,15 @@
 			<h3>Windows agent</h3>
 			<p>The Windows agent will run on any 64bit Windows host such as Windows 7, 8, 10, Server 2008, 2012 and 2016. Simply extract the <a href='healthstone-agent-win64.zip'>package</a> on the host itself or an accessible network location. The Microsoft .NET 4.0 Framework is required. The agent can be installed by running the following command from an Administrator command line:</p>
 			<p><code>install.bat http://127.0.0.1/healthstone default</code></p>
-			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. You can customize it to fit your needs. The installer will copy the binary to <i>%PROGRAMFILES%/healthstone</i>, add the proper entries to the Registry under <i>HKLM/Software/Healthstone</i> and start the service.</p>
+			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. The installer will copy the binary to <i>%PROGRAMFILES%/healthstone</i>, add the proper entries to the Registry under <i>HKLM/Software/Healthstone</i> and start the service.</p>
 			<hr>
 			<h3>Linux agent</h3>
 			<p>The Linux agent will run on any modern Linux host. The only requirement is to have Python 3.x installed and available as <i>python3</i> on the system. Simply extract the <a href='healthstone-agent-linux.tar'>package</a> on the host itself or an accessible network location. The agent can be installed by running the following command:</p>
 			<p><code>sudo ./install.sh http://127.0.0.1/healthstone default</code></p>
-			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. You can customize it to fit your needs. The installer will copy the Python script and create a crontab entry to run the agent on a 5 minutes interval.</p>
+			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. The installer will copy the Python script and add an entry to your rc.local startup file.</p>
+			<hr>
+			<h3>Templates configuration</h3>
+			<p>Templates are flat files stored on the dashboard server which provides configuration information to agents. You can make as many templates as you want. Each template lists a number of modules that you wish the agents to process. Only the [General] section is mandatory, but each section kept must have all its keys listed. Do not use quotes or multiple lines for key values. Templates are not saved on hosts, each agent will fetch its specific template on every poll. Template filenames must contain only alphanumeric characters and end with <i>.template</i>. The same template can be used for Windows and Linux agents, although you may want to create multiple templates and divide them according to your network needs, such as a template for Windows servers, one for workstations, one for Linux, etc.</p>
 			<hr>
 		</div>
 	</body>

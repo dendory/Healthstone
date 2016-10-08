@@ -1,0 +1,35 @@
+Healthstone is an open source and lightweight system monitoring solution able to run many customizable health checks. It is composed of a dashboard server which runs on a Windows or Linux server, along with agents for Windows and Linux hosts that you wish to monitor. The Windows agent is a binary which runs as a service and connects to this dashboard, while the Linux agent is a Python script doing the same thing. The dashboard can be customized to send you notifications through email, Pushbullet or NodePoint tickets when a client stops checking in, or if any of the configured checks fails. Configuration is retrieved in the form of templates from the dashboard by all agents. Templates are stored in the templates folder and can be customized for your needs.
+
+The server component runs the dashboard against which Healthstone clients can register. It can be run on a Linux server with Python 3.x and Apache installed, or a Windows server with IIS (with the CGI and ISAP features) and Python 3.x installed.
+
+Installation procedure:
+
+* Download healthstone.zip onto your server and unzip it where you want the files to live, for example C:\healthstone.
+* Edit dashboard.py and configure the access code and notification settings you want.
+* Run setup.bat as a local administrator on Windows, or create a virtual site linking to the www folder on Linux, making sure the script has write access to ../db.
+* Log into the dashboard using a web browser, then click on 'Download agents' to download the agent packages.
+
+License:
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Patrick Lambert
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+

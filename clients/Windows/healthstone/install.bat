@@ -2,7 +2,7 @@
 @echo off
 set dashboard=%1
 set healthstone=%2
-echo This will install Healthstone and start the service.
+echo This will install the Healthstone agent and start the service.
 echo.
 if "%dashboard%" == "" set /p dashboard="Dashboard URL: "
 if "%template%" == "" set /p template="Template name: "
@@ -16,5 +16,5 @@ reg add HKLM\Software\Healthstone /v dashboard /t REG_SZ /d "%dashboard%" /f
 reg add HKLM\Software\Healthstone /v template /t REG_SZ /d "%template%" /f
 net start Healthstone
 echo.
-echo Installation done. The server will connect to %dashboard% in 30 seconds to fetch its configuration.
+echo Installation done. The agent will connect to %dashboard% in 30 seconds to fetch its configuration.
 echo.

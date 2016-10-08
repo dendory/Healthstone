@@ -1,6 +1,6 @@
 # Healthstone
 
-Healthstone is an open source and lightweight Windows system monitoring service able to run dozens of customizable health checks. If any check fails, it can notify the Event Log, send emails, file a NodePoint ticket, run a custom program, or send a notification using Amazon SNS or Pushbullet. It runs on any Windows XP, 7, 8, Server 2008 or Server 2012 system. It can be used to monitor servers, or the state of Windows desktops in any environment, along with other services such as IIS, SQL Server, etc. There's also a smaller Linux client, and a Python dashboard available.
+Healthstone is an open source and lightweight system monitoring solution able to run many customizable health checks. It is composed of a dashboard server which runs on a Windows or Linux server, along with agents for Windows and Linux hosts that you wish to monitor. The Windows agent is a binary which runs as a service and connects to this dashboard, while the Linux agent is a Python script doing the same thing. The dashboard can be customized to send you notifications through email, Pushbullet or NodePoint tickets when a client stops checking in, or if any of the configured checks fails. Configuration is retrieved in the form of templates from the dashboard by all agents. Templates are stored in the templates folder and can be customized for your needs.
 
 ### Home page
 See [http://healthstone.ca](http://healthstone.ca) for documentation.

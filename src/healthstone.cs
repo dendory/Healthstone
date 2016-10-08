@@ -76,6 +76,13 @@ namespace Healthstone
 			else { section.Add("template", (string)rkey.GetValue("template")); }
 			cfg.Add("general", section);
 
+			if(rkey.GetValue("proxy") != null) wp = new WebProxy((string)rkey.GetValue("proxy"));
+			if(rkey.GetValue("tlsonly") != null)
+			{
+				ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+				System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+			}
+
 			if(Int32.Parse(cfg["general"]["interval"]) < 10) // Since this may take a few seconds to run, disallow running it more than once every 10 secs
 			{
 				EventLog.WriteEntry("Healthstone", "Configuration error: Invalid interval value (must be above 10 seconds)", EventLogEntryType.Error);
