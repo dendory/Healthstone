@@ -130,5 +130,5 @@ while True:
 		print("* A critical error occurred. Configuration reset: " + str(b))
 		cfg = {"general": {"interval": 30, "verbose": "true", "debug": "true", "dashboard": sys.argv[1], "template": sys.argv[2]}}
 
-	print("* Waiting: " + cfg['general']['interval'])
+	print("* Waiting: " + str(cfg['general']['interval']))
 	time.sleep(int(cfg['general']['interval']))
