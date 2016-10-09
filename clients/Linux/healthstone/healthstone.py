@@ -21,7 +21,7 @@ while True:
 		osys = subprocess.check_output(["uname", "-srv"]).decode("utf-8").rstrip('\n')
 		arch = subprocess.check_output(["uname", "-i"]).decode("utf-8").rstrip('\n')
 		uptime = subprocess.check_output(["uptime"]).decode("utf-8").rstrip('\n')
-		freememory = float(os.popen("free | grep Mem | awk '{print $3/$2 * 100.0}'").read().rstrip('\n'))
+		freememory = float(os.popen("free | grep Mem | awk '{print ($2 - $3) / 1000}'").read().rstrip('\n'))
 		localusers = os.popen("grep -v -e 'false' -e 'nologin' -e 'halt' -e 'sync' -e 'shutdown' /etc/passwd | cut -d: -f1 | tr '\n' ' '").read()
 		output = "Healthstone checks: " + hostname + " - " + osys + " (" + arch + ") - " + cfg['general']['template'] + "\n\n" + uptime + "\n\n";
 		(tmp1, tmp2) = uptime.split(': ')
@@ -38,9 +38,9 @@ while True:
 		if "checkmemory" in cfg:
 			if freememory < int(cfg['checkmemory']['minimum']):
 				alarms += 1
-				output += "--> [CheckMemory] Free memory below set threshold: " + str(freememory) + "%\n"
+				output += "--> [CheckMemory] Free memory below set threshold: " + str(freememory) + " MB\n"
 			elif cfg['general']['verbose'] == 'true':
-				output += "[CheckMemory] Free memory: " + str(freememory) + "%\n"
+				output += "[CheckMemory] Free memory: " + str(freememory) + " MB\n"
 		if "checklusers" in cfg:
 			for lu in cfg['checklusers']['include'].split(' '):
 				if lu != "" and lu not in localusers.lower():
@@ -76,13 +76,13 @@ while True:
 			for line in df.splitlines():
 				tmp = line.split(' ')
 				tmp2 = [x for x in tmp if x]
-				freespace = str(tmp2[4]).replace('%','')
-				if freespace.isdigit():
-					freespace = 100 - int(freespace)
-					if int(freespace) > int(cfg['checkdiskspace']['minimum']):
+				freespace = str(tmp2[3])
+				if freespace.isdigit() and "tmpfs" not in tmp2[0]:
+					freespace = int(int(freespace)/1000)
+					if int(freespace) < int(cfg['checkdiskspace']['minimum']):
 						alarms += 1
-						output += "--> [CheckDiskSpace] Disk space threshold exceeded: " + tmp2[0] + " (" + str(freespace) + "%)\n"
-					tmpspace += "\n" + tmp2[0] + ": " + str(freespace)  + "%"
+						output += "--> [CheckDiskSpace] Disk space threshold exceeded: " + tmp2[0] + " (" + str(freespace) + " MB)\n"
+					tmpspace += "\n" + tmp2[0] + ": " + str(freespace)  + " MB"
 			if cfg['general']['verbose'] == 'true':
 				output += "[CheckDiskSpace] Free disk space: " + tmpspace + "\n"
 

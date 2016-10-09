@@ -6,7 +6,7 @@
 # The same template can be used for Windows and Linux agents
 
 [General]
-interval: 300		# Interval between polls in seconds (Windows only)
+interval: 300		# Interval between polls in seconds
 verbose: true		# Verbose output
 debug: false  		# Log debug information in Event Viewer
 
