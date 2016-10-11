@@ -27,7 +27,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2016 Patrick Lambert")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.1.0")]
 
 namespace Healthstone
 {
@@ -375,8 +375,13 @@ namespace Healthstone
 				}
 				catch (Exception e)
 				{
-					output += "--> [CheckUpdates] Registry query failure: " + e + "\n";
-					alarms += 1;
+					if(output.ToLower().IndexOf("microsoft windows 10") != -1)  // Windows 10 updates are on be default, the registry key doesn exist
+					{ output += "[CheckUpdates] Windows Updates are set to: Default\n"; }
+					else 
+					{
+						output += "--> [CheckUpdates] Registry query failure: " + e + "\n";
+						alarms += 1;
+					}
 				}
 			}
 

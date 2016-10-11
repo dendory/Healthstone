@@ -45,7 +45,7 @@ import urllib.parse
 import smtplib
 import hashlib
 from email.mime.text import MIMEText
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
@@ -124,7 +124,7 @@ def notify(title, text):
 		data = "api=add_ticket&key=" + NotifyNodePointKey + "&product_id=" + NotifyNodePointProduct + "&release_id=" + NotifyNodePointRelease + "&title=" + urllib.parse.quote("Healthstone checks: " + title, '') + "&description=" + urllib.parse.quote(text, '')
 		result = urllib.request.urlopen(NotifyNodePointURL + "/?" + data)
 	if NotifySMTPServer: # Email notification
-		msg = MIMEText(text)
+		msg = MIMEText(text.replace('&gt;','>'))
 		msg['Subject'] = 'Healthstone checks: ' + title
 		msg['From'] = NotifySMTPFrom
 		msg['To'] = NotifySMTPTo
