@@ -27,7 +27,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2016 Patrick Lambert")]
-[assembly: AssemblyFileVersion("2.0.1.0")]
+[assembly: AssemblyFileVersion("2.0.2.0")]
 
 namespace Healthstone
 {
@@ -442,6 +442,53 @@ namespace Healthstone
 						}
 					}
 					if(cfg["general"]["verbose"] == "true") { output += "[CheckLUsers] Local users: " + localusers + "\n"; } 
+				}
+				catch (Exception e)
+				{
+					output += "--> [CheckLUsers] WMI Query failure: " + e + "\n";
+					alarms += 1;
+				}
+			}
+
+			if(cfg.ContainsKey("checkfirewall"))  // check firewall
+			{
+				try
+				{
+					string firewallresults = "";
+					rkey = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\PublicProfile");
+					if((int)rkey.GetValue("EnableFirewall") != 1)
+					{
+						if(cfg["checkfirewall"]["require"].IndexOf("public") != -1)
+						{
+							output += "--> [CheckFirewall] Public firewall is OFF\n";
+							alarms += 1;
+						}
+						firewallresults += "Public: OFF  ";						
+					}
+					else { firewallresults += "Public: ON  "; }
+					rkey = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile");
+					if((int)rkey.GetValue("EnableFirewall") != 1)
+					{
+						if(cfg["checkfirewall"]["require"].IndexOf("private") != -1)
+						{
+							output += "--> [CheckFirewall] Private firewall is OFF\n";
+							alarms += 1;
+						}
+						firewallresults += "Private: OFF  ";	
+					}
+					else { firewallresults += "Private: ON  "; }
+					rkey = Registry.LocalMachine.OpenSubKey("System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile");
+					if((int)rkey.GetValue("EnableFirewall") != 1)
+					{
+						if(cfg["checkfirewall"]["require"].IndexOf("domain") != -1)
+						{
+							output += "--> [CheckFirewall] Domain firewall is OFF\n";
+							alarms += 1;
+						}
+						firewallresults += "Domain: OFF  ";
+					}
+					else { firewallresults += "Domain: ON  "; }
+					if(cfg["general"]["verbose"] == "true") { output += "[CheckFirewall] " + firewallresults + "\n"; }
 				}
 				catch (Exception e)
 				{

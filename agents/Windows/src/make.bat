@@ -1,3 +1,13 @@
 :: Make a CSharp service and sign it
-@%SYSTEMROOT%\Microsoft.NET\Framework64\v4.0.30319\csc.exe /out:%~dp0..\healthstone\healthstone.exe %~dp0healthstone.cs
-@call "C:\Program Files (x86)\Windows Kits\8.0\bin\x64\signtool.exe" sign /n "Patrick Lambert" /t http://timestamp.verisign.com/scripts/timstamp.dll %~dp0..\healthstone\healthstone.exe
+@echo off
+cd %~dp0
+%SYSTEMROOT%\Microsoft.NET\Framework64\v4.0.30319\csc.exe /out:..\64\healthstone\healthstone.exe healthstone.cs
+%SYSTEMROOT%\Microsoft.NET\Framework\v4.0.30319\csc.exe /out:..\32\healthstone\healthstone.exe healthstone.cs
+call "C:\Program Files (x86)\Windows Kits\8.0\bin\x64\signtool.exe" sign /n "Patrick Lambert" /t http://timestamp.verisign.com/scripts/timstamp.dll ..\64\healthstone\healthstone.exe
+call "C:\Program Files (x86)\Windows Kits\8.0\bin\x64\signtool.exe" sign /n "Patrick Lambert" /t http://timestamp.verisign.com/scripts/timstamp.dll ..\32\healthstone\healthstone.exe
+del ..\..\..\server\healthstone\www\healthstone-agent-win64.zip
+del ..\..\..\server\healthstone\www\healthstone-agent-win32.zip
+cd ..\64
+call "C:\Program Files\7-Zip\7z" a ..\..\..\server\healthstone\www\healthstone-agent-win64.zip healthstone
+cd ..\32
+call "C:\Program Files\7-Zip\7z" a ..\..\..\server\healthstone\www\healthstone-agent-win32.zip healthstone

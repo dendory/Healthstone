@@ -31,3 +31,6 @@ exclude:			# List of local users that must NOT be enabled on the system
 
 [CheckUpdates]
 status: Automatic	# Updates must be set to "Automatic", "Disabled" or "Manual" (Windows only)
+
+[CheckFirewall]
+require: Public		# Space separated list of realms to check: "Domain", "Public" and "Private" (Windows only)

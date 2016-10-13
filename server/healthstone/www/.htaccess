@@ -1,3 +1,5 @@
 DirectoryIndex dashboard.py
 Options +ExecCGI
 AddHandler cgi-script .py
+AddDefaultCharset UTF-8
+SetEnv PYTHONIOENCODING utf8

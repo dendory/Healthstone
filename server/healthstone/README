@@ -5,7 +5,7 @@ The server component runs the dashboard against which Healthstone clients can re
 Installation procedure:
 
 * Download healthstone.zip onto your server and unzip it where you want the files to live, for example C:\healthstone.
-* Edit dashboard.py and configure the access code and notification settings you want.
+* Edit www/dashboard.py and configure the access code and notification settings you want.
 * Run setup.bat as a local administrator on Windows, or create a virtual site linking to the www folder on Linux, making sure the script has write access to ../db.
 * Log into the dashboard using a web browser, then click on 'Download agents' to download the agent packages.
 

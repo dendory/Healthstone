@@ -35,17 +35,19 @@ NotifySMTPTo = "you@example.com"
 # END CONFIGURATION
 #
 
+import sys
+import os
 import sqlite3
 import time
 import cgi
 import re
-import os
 import urllib.request
 import urllib.parse
 import smtplib
 import hashlib
 from email.mime.text import MIMEText
-VERSION = "2.0.1"
+
+VERSION = "2.0.2"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
