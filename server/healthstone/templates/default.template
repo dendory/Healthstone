@@ -6,7 +6,7 @@
 # The same template can be used for Windows and Linux agents
 
 [General]
-interval: 300		# Interval between polls in seconds
+interval: 60		# Interval between polls in seconds
 verbose: true		# Verbose output
 debug: false  		# Log debug information in Event Viewer
 
@@ -28,6 +28,10 @@ minimum: 500		# Minimum amount of free space required on all local disks (MB)
 [CheckLUsers]
 include:   			# List of local users that must be enabled on the system
 exclude:			# List of local users that must NOT be enabled on the system
+
+[CheckNetwork]
+host: google.com	# Hostname or IP to check connectivity against
+latency: 500		# Maximum latency required (ms)
 
 [CheckUpdates]
 status: Automatic	# Updates must be set to "Automatic", "Disabled" or "Manual" (Windows only)

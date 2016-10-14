@@ -110,6 +110,22 @@ while True:
 				a, b, c = sys.exc_info()
 				alarms += 1
 				output += "--> [CheckDiskSpace] Error while fetching disk information: " + str(b) + "\n"
+		if "checknetwork" in cfg:
+			try:
+				rtt = os.popen("ping -nqc 3 " + cfg['checknetwork']['host'] + " |grep rtt |awk '{print $4}'").read()
+				if len(rtt.split('/')) == 4:
+					if float(rtt.split('/')[1]) > int(cfg['checknetwork']['latency']):
+						alarms += 1
+						output += "--> [CheckNetwork] High network latency: " + rtt.split('/')[1] + "\n"
+					elif cfg['general']['verbose'] == 'true':
+						output += "[CheckNetwork] Latency: " + rtt.split('/')[1] + "\n"
+				else:
+					alarms += 1
+					output += "--> [CheckNetwork] Could not ping host. " + rtt + "\n"
+			except:
+				a, b, c = sys.exc_info()
+				alarms += 1
+				output += "--> [CheckNetwork] Error pinging host: " + str(b) + "\n"
 
 		# Send results off
 		if alarms > 1:

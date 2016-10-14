@@ -497,6 +497,34 @@ namespace Healthstone
 				}
 			}
 
+			if(cfg.ContainsKey("checknetwork"))  // check network connection
+			{
+				try
+				{
+					Ping ping = new Ping();
+					PingReply reply = ping.Send(cfg["checknetwork"]["host"], 4000);
+					if(reply.Status != IPStatus.Success)
+					{
+						output += "--> [CheckNetwork] Host " + cfg["checknetwork"]["host"] + " is not reachable.\n";
+						alarms += 1;
+					}
+					else
+					{
+						if(reply.RoundtripTime > Int32.Parse(cfg["checknetwork"]["latency"]))
+						{
+							output += "--> [CheckNetwork] High network latency: " + reply.RoundtripTime + "ms.\n";
+							alarms += 1;
+						}
+						else if(cfg["general"]["verbose"] == "true") { output += "[CheckNetwork] Latency: " + reply.RoundtripTime + " ms.\n"; }
+					}
+				}
+				catch (Exception e)
+				{
+					output += "--> [CheckNetwork] Ping failure: " + e + "\n";
+					alarms += 1;
+				}
+			}
+
 
 			// Notifications
 			if(alarms > 1) { output += "\nChecks completed with " + alarms.ToString() + " alarms raised.\n"; }

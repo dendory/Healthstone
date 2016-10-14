@@ -16,8 +16,8 @@ fi
 cp healthstone.py /usr/bin/healthstone.py
 chmod +x /usr/bin/healthstone.py
 if ! grep -q healthstone /etc/rc.local; then
-        echo "/usr/bin/healthstone.py $dashboard $template >> /var/log/healthstone.log 2>&1 &" >> /etc/rc.local
+        echo "/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &" >> /etc/rc.local
         chmod +x /etc/rc.local
 fi
 echo "Installation done. The agent will connect to $dashboard shortly to fetch its configuration."
-/usr/bin/healthstone.py $dashboard $template >> /var/log/healthstone.log 2>&1 &
+/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &

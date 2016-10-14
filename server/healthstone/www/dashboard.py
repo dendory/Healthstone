@@ -247,18 +247,18 @@ else: # Logged in
 				if i < len(cpus):
 					print(",")
 			print("] }]}; var ctx0 = document.getElementById('cpu').getContext('2d'); new Chart(ctx0).Line(data);</script>") 
-			print("<br><h4>Last events</h4><table class='table table-striped'>")
-			rows2 = queryDB("SELECT * FROM log WHERE name = ? ORDER BY time DESC LIMIT 200", [query.getvalue("name")])
+			print("<br><h4>Last events</h4><table class='table table-striped' id='events'><thead><tr><th></th><th>Time</th><th>Event</th></tr></thead><tbody>")
+			rows2 = queryDB("SELECT * FROM log WHERE name = ? ORDER BY time DESC LIMIT 500", [query.getvalue("name")])
 			for row2 in rows2:
-				print("<tr><th>")
+				print("<tr><td>")
 				if int(row2[0]) == 2:
 					print("<center><i class='fa fa-exclamation-triangle'></i></center>")
 				elif int(row2[0]) == 1:
 					print("<center><i class='fa fa-question-circle'></i></center>")
 				else:
 					print("<center><i class='fa fa-info'></i></center>")
-				print("</th><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row2[3])) + "</td><td>" + str(row2[2]).replace("\n"," ") + "</td></tr>")
-			print("</table>")
+				print("</td><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row2[3])) + "</td><td>" + str(row2[2]).replace("\n"," ") + "</td></tr>")
+			print("</tbody></table><script>$(document).ready(function(){$('#events').DataTable({'order':[[1,'desc']]});});</script>")
 			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 	else: # list of systems
 		print("<table class='table table-striped' id='systems'><thead><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr></thead><tbody>")
