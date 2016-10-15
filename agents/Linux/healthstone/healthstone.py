@@ -118,7 +118,7 @@ while True:
 						alarms += 1
 						output += "--> [CheckNetwork] High network latency: " + rtt.split('/')[1] + "\n"
 					elif cfg['general']['verbose'] == 'true':
-						output += "[CheckNetwork] Latency: " + rtt.split('/')[1] + "\n"
+						output += "[CheckNetwork] Latency: " + str(int(float(rtt.split('/')[1]))) + " ms.\n"
 				else:
 					alarms += 1
 					output += "--> [CheckNetwork] Could not ping host. " + rtt + "\n"
