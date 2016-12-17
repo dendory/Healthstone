@@ -116,7 +116,7 @@ while True:
 				if len(rtt.split('/')) == 4:
 					if float(rtt.split('/')[1]) > int(cfg['checknetwork']['latency']):
 						alarms += 1
-						output += "--> [CheckNetwork] High network latency: " + rtt.split('/')[1] + "\n"
+						output += "--> [CheckNetwork] High network latency: " + str(int(float(rtt.split('/')[1]))) + " ms.\n"
 					elif cfg['general']['verbose'] == 'true':
 						output += "[CheckNetwork] Latency: " + str(int(float(rtt.split('/')[1]))) + " ms.\n"
 				else:
