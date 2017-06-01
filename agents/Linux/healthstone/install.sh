@@ -1,6 +1,6 @@
 #!/bin/bash
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root."
+   echo "This script must be run as root"
    exit 1
 fi
 
@@ -24,5 +24,8 @@ if ! grep -q healthstone /etc/rc.local; then
         echo "/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &" >> /etc/rc.local
         chmod +x /etc/rc.local
 fi
-echo "Installation done. The agent will connect to $dashboard shortly to fetch its configuration."
+
+echo "Starting Healthstone..."
 /usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &
+
+echo "Installation done. The agent will connect to $dashboard shortly to fetch its configuration."

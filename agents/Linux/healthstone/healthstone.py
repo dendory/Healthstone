@@ -38,6 +38,26 @@ while True:
 				a, b, c = sys.exc_info()
 				alarms += 1
 				output += "--> [CheckCPU] Error while fetching CPU information: " + str(b) + "\n"
+		if "checkupdates" in cfg:
+			try:
+				upd = subprocess.check_output(["yum", "check-update"])
+				if cfg['general']['verbose'] == 'true':
+					output += "[CheckUpdates] No updates available.\n"
+			except subprocess.CalledProcessError as grepexc:
+				if grepexc.returncode == 100:
+					alarms += 1
+					output += "--> [CheckUpdates] System updates are available.\n"
+				else:
+					try:
+						upd = subprocess.check_output(["apt-get", "-u", "upgrade", "--assume-no"])
+						if "0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded" not in upd:
+							alarms += 1
+							output += "--> [CheckUpdates] System updates are available.\n"
+						elif cfg['general']['verbose'] == 'true':
+							output += "[CheckUpdates] No updates available.\n"
+					except:
+						alarms += 1
+						output += "--> [CheckUpdates] Both 'yum check-update' and 'apt-get -u upgrade --assume-no' failed to run.\n"
 		if "checkmemory" in cfg:
 			try:
 				freememory = float(os.popen("free | grep Mem | awk '{print ($2 - $3) / 1000}'").read().rstrip('\n'))
