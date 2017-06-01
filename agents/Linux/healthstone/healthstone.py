@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2016 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2015-2017 Patrick Lambert - http://healthstone.ca
 
 import subprocess
 import urllib.request
@@ -7,7 +7,7 @@ import urllib.parse
 import time
 import sys
 import os
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 if len(sys.argv) < 3:
 	print("* Syntax: healthstone.py <dashboard url> <template name>")
 	quit(1)

@@ -1,7 +1,12 @@
 #!/bin/bash
 if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 1>&2
+   echo "This script must be run as root."
    exit 1
+fi
+
+if [ ! -f /usr/bin/python3 ]; then
+    echo "Could not find /usr/bin/python3, make sure Python 3.x is installed."
+    exit 1
 fi
 
 dashboard="$1"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2016 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2015-2017 Patrick Lambert - http://healthstone.ca
 
 #
 # BEGIN CONFIGURATION
@@ -47,7 +47,7 @@ import smtplib
 import hashlib
 from email.mime.text import MIMEText
 
-VERSION = "2.0.2"
+VERSION = "2.0.3"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
