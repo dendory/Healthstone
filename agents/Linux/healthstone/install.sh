@@ -25,7 +25,9 @@ if ! grep -q healthstone /etc/rc.local; then
         chmod +x /etc/rc.local
 fi
 
-echo "Starting Healthstone..."
-/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &
+if [[ $(ps ax |grep healthstone |wc -l) -lt 1 ]]; then
+	echo "Starting Healthstone..."
+	/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &
+fi
 
 echo "Installation done. The agent will connect to $dashboard shortly to fetch its configuration."
