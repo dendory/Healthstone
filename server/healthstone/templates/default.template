@@ -37,4 +37,4 @@ latency: 500		# Maximum latency required (ms)
 status: Automatic	# Updates must be set to "Automatic", "Disabled" or "Manual"
 
 [CheckFirewall]
-require: Public		# Space separated list of realms to check: "Domain", "Public" and "Private" (Windows only)
+require: Public		# Space separated list of realms to check: "Domain", "Public" and "Private"

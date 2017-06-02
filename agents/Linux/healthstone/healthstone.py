@@ -13,6 +13,7 @@ if len(sys.argv) < 3:
 	quit(1)
 cfg = {"general": {"interval": 30, "verbose": "true", "debug": "true", "dashboard": sys.argv[1], "template": sys.argv[2]}}
 print("* Healthstone System Monitor - Dashboard set to " + cfg['general']['dashboard'])
+criterr = ""
 
 while True:
 	try:
@@ -24,9 +25,15 @@ while True:
 		output = "Healthstone checks: " + hostname + " - " + osys + " (" + arch + ") - " + cfg['general']['template'] + "\n\n" + uptime + "\n\n";
 		(tmp1, tmp2) = uptime.split(': ')
 		cpu = int(float(tmp2.split(',')[0]))
+		alarms = 0
+
+		# Something happened on the last loop
+		if criterr != "":
+			alarms += 1
+			output += criterr
+			criterr = ""
 
 		# Run checks
-		alarms = 0
 		if "checkcpu" in cfg:
 			try:
 				if cpu > int(cfg['checkcpu']['maximum']):
@@ -61,6 +68,19 @@ while True:
 				except:
 					alarms += 1
 					output += "--> [CheckUpdates] Both 'yum check-update' and 'apt-get -u upgrade --assume-no' failed to run.\n"
+		if "checkfirewall" in cfg:
+			try:
+				subprocess.check_output(["systemctl", "is-active", "firewalld"])
+				if cfg['general']['verbose'] == 'true':
+					output += "[CheckFirewall] firewalld is active.\n"
+			except:
+				try:
+					subprocess.check_output(["systemctl", "is-active", "iptables"])
+					if cfg['general']['verbose'] == 'true':
+						output += "[CheckFirewall] iptables is active.\n"
+				except:
+					alarms += 1
+					output += "--> [CheckFirewall] Both firewalld and iptables are inactive.\n"
 		if "checkmemory" in cfg:
 			try:
 				freememory = float(os.popen("free | grep Mem | awk '{print ($2 - $3) / 1000}'").read().rstrip('\n'))
@@ -159,9 +179,10 @@ while True:
 
 		data = "alarms=" + str(alarms) + "&cpu=" + str(cpu) + "&name=" + urllib.parse.quote(hostname, '') + "&template=" + urllib.parse.quote(cfg['general']['template'], '') + "&output=" + urllib.parse.quote(output, '') + "&interval=" + str(cfg['general']['interval'])
 		result = urllib.request.urlopen(cfg['general']['dashboard'] + "/?" + data).read().decode('utf8')
-		if "[general]" not in str(result).lower():
-			print("* Error: Invalid template received from dashboard:\n" + result)
 
+		if "[general]" not in str(result).lower():
+			criterr = "Error: Invalid template received from dashboard. Configuration reset.\n"
+			print("* " + criterr)
 		else:
 			if cfg['general']['debug'] == 'true':
 				print("* Template received by dashboard:\n" + result)
@@ -188,10 +209,10 @@ while True:
 				cfg[sectionName] = section
 			cfg['general']['dashboard'] = dashboard
 			cfg['general']['template'] = template
-
 	except:
 		a, b, c = sys.exc_info()
-		print("* A critical error occurred. Configuration reset: " + str(b))
+		criterr = "A critical error occurred. Configuration reset: " + str(b) + "\n"
+		print("* " + criterr)
 		cfg = {"general": {"interval": 30, "verbose": "true", "debug": "true", "dashboard": sys.argv[1], "template": sys.argv[2]}}
 
 	print("* Waiting: " + str(cfg['general']['interval']))
