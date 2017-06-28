@@ -17,5 +17,5 @@ See [http://healthstone.ca](http://healthstone.ca) for documentation.
 
 ![](dashboard0.jpg)
 
-![](template.png)
+![](template.jpg)
 
