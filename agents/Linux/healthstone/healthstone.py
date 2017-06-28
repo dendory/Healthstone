@@ -7,7 +7,7 @@ import urllib.parse
 import time
 import sys
 import os
-VERSION = "2.0.3"
+
 if len(sys.argv) < 3:
 	print("* Syntax: healthstone.py <dashboard url> <template name>")
 	quit(1)

@@ -11,6 +11,9 @@ AccessCode = "1234"
 # Delete log entries after a week [True|False]
 DeleteOldEntries = False
 
+# Dark, large text theme for dashboard displays [True|False]
+DarkTheme = False
+
 # Send notifications for systems that lose contacts [True|False]
 NotifyOnLostContact = True
 
@@ -47,7 +50,7 @@ import smtplib
 import hashlib
 from email.mime.text import MIMEText
 
-VERSION = "2.0.3"
+VERSION = "2.0.4"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
@@ -145,11 +148,11 @@ rows = queryDB("SELECT * FROM systems", [])
 for row in rows:
 	if (row[6] + row[3] * 2 + 15) < time.time() and row[1] not in lostcontact:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
-		if NotifyOnLostContact:
-			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
 		if DeleteOldEntries:
 			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
+		if NotifyOnLostContact:
+			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
 
 #
 # Connection from Healthstone agents
@@ -169,11 +172,11 @@ if query.getvalue("output") and query.getvalue("name"):
 	rows = queryDB("SELECT * FROM systems WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	for row in rows:
 		if row[4] == 0 and alarm == 1:
-			if NotifyOnAlarms:
-				notify("Alarms raised on " + row[1], cgi.escape(query.getvalue("output")))
 			if DeleteOldEntries:
 				execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
 			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], cgi.escape(query.getvalue("output")), now])
+			if NotifyOnAlarms:
+				notify("Alarms raised on " + row[1], cgi.escape(query.getvalue("output")))
 		found = True
 	if found:
 		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, cgi.escape(query.getvalue("output")), now, os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name"))])
@@ -206,6 +209,24 @@ f = open("top.html", "r")
 for line in f:
 	print(line.replace("##TIME##", time.strftime("%Y/%m/%d %H:%M:%S")))
 f.close()
+if DarkTheme:
+	print("""
+<style>
+html,body,.container,tr,td,.panel
+{
+    color: #FFFFFF !important;
+    background-color: #000000 !important;
+}
+td
+{
+    font-size: 18px !important;
+}
+.navbar
+{
+	display: none;
+}
+</style><br>
+""")
 if not login: # Login form
 	print("<p><form method='POST' action='.'><div class='row text-center'><div class='col-md-3'></div><div class='col-md-6'><input type='password' class='form-control' name='ac' placeholder='Access code'><br><input type='submit' class='btn btn-primary' value='Login'></div></div><div class='col-md-3'></div></form></p>")
 else: # Logged in
@@ -261,7 +282,8 @@ else: # Logged in
 			print("</tbody></table><script>$(document).ready(function(){$('#events').DataTable({'order':[[1,'desc']]});});</script>")
 			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
 	else: # list of systems
-		print("<table class='table table-striped' id='systems'><thead><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr></thead><tbody>")
+		# Large screens
+		print("<div class='hidden-xs visible-md visible-sm visible-lg'><table class='table table-striped' id='systems'><thead><tr><th><i class='fa fa-laptop'></i></th><th>IP</th><th>Name</th><th>CPU</th><th>Last update</th><th>Status</th></tr></thead><tbody>")
 		rows = queryDB("SELECT * FROM systems ORDER BY time DESC", [])
 		for row in rows:
 			print("<tr>")
@@ -279,7 +301,31 @@ else: # Logged in
 			else:
 				print("btn-success' value='Ok'>")
 			print("</form></td></tr>")	
-		print("</tbody></table><script>$(document).ready(function(){$('#systems').DataTable({'order':[[4,'desc']]});});</script>")	
+		print("</tbody></table>")
+		if not DarkTheme:
+			print("<script>$(document).ready(function(){$('#systems').DataTable({'order':[[4,'desc']]});});</script>")	
+		# Small screens
+		print("</div><div class='visible-xs hidden-sm hidden-md hidden-lg'>")
+		rows = queryDB("SELECT * FROM systems ORDER BY time DESC", [])
+		for row in rows:
+			print("<a href='./?ip=" + row[0] + "&name=" + row[1] + "'>")
+			if (row[6] + row[3] * 2 + 15) < time.time():
+				print("<div class='alert alert-warning' role='alert'><center>")
+			elif row[4] == 1:
+				print("<div class='alert alert-danger' role='alert'><center>")
+			else:
+				print("<div class='alert alert-success' role='alert'><center>")
+			if "Microsoft Windows" in row[5]:
+				print("<i class='fa fa-windows'></i>")
+			elif "Linux" in row[5]:
+				print("<i class='fa fa-linux'></i>")
+			else:
+				print("<i class='fa fa-laptop'></i>")
+			print(" <b>" + row[1] + "</b> [" + row[0] + "] " + str(row[2]) + "%<br>")
+			print("<i>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])) + "</i>")
+			print("</center></div>")
+		print("</div></a>")
+		print("<br><center>" + os.popen("uptime").read().replace('\n','<br>') + "</center>")
 f = open("bottom.html", "r")
 for line in f:
 	print(line.replace("##VERSION##", VERSION))
