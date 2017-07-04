@@ -141,7 +141,7 @@ while True:
 					tmp = line.split(' ')
 					tmp2 = [x for x in tmp if x]
 					freespace = str(tmp2[3])
-					if freespace.isdigit() and "tmpfs" not in tmp2[0] and "udev" not in tmp2[0] and "mmcblk" not in tmp2[0]:
+					if freespace.isdigit() and "tmpfs" not in tmp2[0] and "udev" not in tmp2[0] and (cfg['checkdiskspace']['onlysystemdisk'] != 'true' or tmp2[5] == '/'):
 						freespace = int(int(freespace)/1000)
 						if int(freespace) < int(cfg['checkdiskspace']['minimum']):
 							alarms += 1

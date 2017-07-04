@@ -50,7 +50,7 @@ import smtplib
 import hashlib
 from email.mime.text import MIMEText
 
-VERSION = "2.0.4"
+VERSION = "2.0.5"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
