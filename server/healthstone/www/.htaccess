@@ -3,4 +3,4 @@ Options +ExecCGI
 AddHandler cgi-script .py
 AddDefaultCharset UTF-8
 SetEnv PYTHONIOENCODING utf8
-LimitRequestLine 100000
+#LimitRequestLine 100000
