@@ -9,7 +9,8 @@ in, or if any of the configured checks fails. Configuration is retrieved in the 
 stored in the templates folder and can be customized for your needs.
 
 The server component runs the dashboard against which Healthstone clients can register. It must be run on a Linux server with Python 3.x and 
-Apache installed, or a Windows server with IIS (with the CGI and ISAP features) and Python 3.x installed.
+Apache installed, or a Windows server with IIS (with the CGI and ISAP features) and Python 3.x installed. The dashboard also has the ability to
+use probes for hosts that you want to monitor without agents. Probes are checked on a schedule every 1 minute.
 
 
 Installation procedure
@@ -19,7 +20,7 @@ Installation procedure
 * Download healthstone.zip onto your server and unzip it where you want the files to live, for example C:\healthstone.
 * Edit www/dashboard.py and configure the access code and notification settings you want.
 * Run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
-* Log into the dashboard using a web browser, then click on 'Download agents' to download the agent packages.
+* Log into the dashboard using a web browser, then click on 'Configure agents' to download the agent packages.
 
 
 Templates
@@ -87,6 +88,12 @@ verbose to false.
 * I'm not getting notification emails?
 
 Check the Apache log to see if the notify function failed for some reason. This should be under /var/log/httpd/<site_name>.error_log.
+
+* Probes are not working?
+
+Probes rely on the dashboard component to run every minute on schedule. The setup process attempts to add a crontab entry (for Linux) or a
+scheduled task (on Windows) to run the script. Check your system logs to see if the task runs properly, and fix any error that may prevent it
+from running.
 
 
 License

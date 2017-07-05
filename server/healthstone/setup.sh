@@ -11,7 +11,7 @@ if [ ! -f /usr/bin/python3 ]; then
 	exit 1
 fi
 
-echo "This script will copy Healthstone files, set permissions, and add Apache configuration options. Press CTRL-C to cancel."
+echo "This script will copy Healthstone files, set permissions, add crontab and Apache configuration options. Press ENTER to continue or CTRL-C to cancel."
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Get default values
@@ -33,6 +33,15 @@ cp -r $DIR $installdir
 echo "* Setting permissions..."
 chown -R $wwwuser.$wwwuser $installdir/healthstone
 chmod 755 $installdir/healthstone/www/dashboard.py
+
+# Add crontab for probes
+echo "* Adding automations schedule for probes..."
+crontab -l > /tmp/mycron
+if ! grep -q dashboard /tmp/mycron; then
+	echo "*/1 * * * * (cd $installdir/healthstone/www && ./dashboard.py > /dev/null)" >> /tmp/mycron
+	crontab /tmp/mycron
+fi
+rm -f /tmp/mycron
 
 # Add Apache config
 echo "* Adding Apache config..."

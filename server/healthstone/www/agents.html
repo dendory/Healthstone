@@ -1,33 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta http-equiv="refresh" content="60">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Healthstone Monitoring System</title>
-		<link rel="shortcut icon"" href="favicon.ico">
-		<link href="bootstrap.css" rel="stylesheet">
-		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-		<script src="chart.js"></script>
-		<script src="//code.jquery.com/jquery-1.11.3.js"></script>
-		<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
-  		<script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
-	</head>
-	<body>
-		<nav class="navbar navbar-default" role="navigation">
-			<div class="container topnav">
-				<div class="navbar-header">
-					<a class="navbar-brand topnav" href='./'>Healthstone dashboard</a>
-				</div>
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-					<ul class="nav navbar-nav navbar-right">
-						<li><a href='#'>Healthstone agents</a></li>
-					</ul>
-				</div>
-			</div>
-		</nav>
-		<div class="container">
 
 			<h3>Windows agent</h3>
 			<ul><li>64 bits download: <a href='healthstone-agent-win64.zip'>healthstone-agent-win64.zip</a></li></ul>
@@ -45,6 +15,6 @@
 			<h3>Templates configuration</h3>
 			<p>Templates are flat files stored on the dashboard server which provides configuration information to agents. You can make as many templates as you want. Each template lists a number of modules that you wish the agents to process. Only the [General] section is mandatory, but each section kept must have all its keys listed. Do not use quotes or multiple lines for key values. Templates are not saved on hosts, each agent will fetch its specific template on every poll. Template filenames must contain only alphanumeric characters and end with <i>.template</i>. The same template can be used for Windows and Linux agents, although you may want to create multiple templates and divide them according to your network needs, such as a template for Windows servers, one for workstations, one for Linux, etc.</p>
 			<hr>
-		</div>
-	</body>
-</html>
+			<h3>Probes</h3>
+			<p>Probes are simple heartbeats that can be configured against specific hosts where you do not want to or cannot install agents. These probes do not provide as much information as the agents do, they simply check whether a host is up or down. Each probe can be configured to check whether the host is up using a number of methods, including an ICMP ping request, a TCP connection on the HTTP or HTTPS port, a SSH connection or a RDP connection.</p>
+
