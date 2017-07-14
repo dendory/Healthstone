@@ -40,6 +40,19 @@ If a template has a syntax error in it, or if an invalid template is provided, t
 module enabled and a 30 seconds poll interval.
 
 
+API
+===
+
+The dashboard can provide results in a JSON format with the following calls by passing GET parameters. The two required parameters include 'ac'
+for the access code and 'api' for the API call. Example: dashboard.py?api=systems&ac=1234
+
+Here are the supported API calls:
+systems: List all systems.
+probes: List all probes.
+lostcontact: List all systems that lost contact.
+log: List the last 500 log entries.
+
+
 FAQ
 ===
 
@@ -85,7 +98,7 @@ Make sure your template is not corrupted or misformed. Agents are set to revert 
 module being run if they cannot parse the template successfully. There is also a limit to the amount of data passed by the agents, try turning 
 verbose to false.
 
-* I'm not getting notification emails?
+* I'm not getting notifications?
 
 Check the Apache log to see if the notify function failed for some reason. This should be under /var/log/httpd/<site_name>.error_log.
 

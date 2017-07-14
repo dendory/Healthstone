@@ -1,7 +1,9 @@
 
 			<h3>Windows agent</h3>
-			<ul><li>64 bits download: <a href='healthstone-agent-win64.zip'>healthstone-agent-win64.zip</a></li></ul>
-			<ul><li>32 bits download: <a href='healthstone-agent-win32.zip'>healthstone-agent-win32.zip</a></li></ul>
+			<ul>
+				<li>64 bits download: <a href='healthstone-agent-win64.zip'>healthstone-agent-win64.zip</a></li>
+				<li>32 bits download: <a href='healthstone-agent-win32.zip'>healthstone-agent-win32.zip</a></li>
+			</ul>
 			<p>The Windows agent will run on any 32 or 64 bit Windows host such as Windows 7, 8, 10, Server 2008, 2012 and 2016. Simply extract the package on the host itself or an accessible network location. The Microsoft .NET 4.5 Framework is required. The agent can be installed by running the following command from an Administrator command line:</p>
 			<p><code>install.bat http://127.0.0.1/healthstone default</code></p>
 			<p>The first argument is the URL of this dashboard. The second argument is the template you want to use. Templates are stored in the <i>templates</i> folder on this dashboard server. The agent will fetch the template at every poll. The installer will copy the binary to <i>%PROGRAMFILES%/healthstone</i>, add the proper entries to the Registry under <i>HKLM/Software/Healthstone</i> and start the service.</p>
@@ -14,6 +16,15 @@
 			<hr>
 			<h3>Templates configuration</h3>
 			<p>Templates are flat files stored on the dashboard server which provides configuration information to agents. You can make as many templates as you want. Each template lists a number of modules that you wish the agents to process. Only the [General] section is mandatory, but each section kept must have all its keys listed. Do not use quotes or multiple lines for key values. Templates are not saved on hosts, each agent will fetch its specific template on every poll. Template filenames must contain only alphanumeric characters and end with <i>.template</i>. The same template can be used for Windows and Linux agents, although you may want to create multiple templates and divide them according to your network needs, such as a template for Windows servers, one for workstations, one for Linux, etc.</p>
+			<hr>
+			<h3>API</h3>
+			<p>This dashboard can provide results in a JSON format to API users. The following calls are available:</p>
+			<ul>
+				<li><a href='./?api=systems'>List all systems</a></li>
+				<li><a href='./?api=probes'>List all probes</a></li>
+				<li><a href='./?api=lostcontact'>Systems who lost contact</a></li>
+				<li><a href='./?api=log'>Last 500 log entries</a></li>
+			</ul>
 			<hr>
 			<h3>Probes</h3>
 			<p>Probes are simple heartbeats that can be configured against specific hosts where you do not want to or cannot install agents. These probes do not provide as much information as the agents do, they simply check whether a host is up or down. Each probe can be configured to check whether the host is up using a number of methods, including an ICMP ping request, a TCP connection on the HTTP or HTTPS port, a SSH connection or a RDP connection.</p>

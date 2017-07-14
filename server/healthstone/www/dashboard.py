@@ -34,12 +34,19 @@ NotifySMTPServer = False
 NotifySMTPFrom = "me@example.com"
 NotifySMTPTo = "you@example.com"
 
+# Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic urn|False]
+NotifySNSTopic = False
+NotifySNSAccessKey = ""
+NotifySNSAccessSecret = ""
+NotifySNSRegion = ""
+
 #
 # END CONFIGURATION
 #
 
 import sys
 import os
+import json
 import sqlite3
 import time
 import cgi
@@ -51,7 +58,7 @@ import smtplib
 import hashlib
 from email.mime.text import MIMEText
 
-VERSION = "2.0.5"
+VERSION = "2.0.6"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
@@ -64,8 +71,11 @@ def sha256(msg):
 #
 if query.getvalue("output") and query.getvalue("name"):
 	print("Content-Type: text/plain; charset=utf-8")	
+elif query.getvalue("api"):
+	print("Content-Type: application/javascript; charset=utf-8")
 else:
 	print("Content-Type: text/html; charset=utf-8")
+
 if query.getvalue("ac"): # Login from form
 	if query.getvalue("ac") == AccessCode:
 		print("Set-Cookie: ac=" + sha256(AccessCode))
@@ -133,6 +143,11 @@ def notify(title, text):
 		s = smtplib.SMTP(NotifySMTPServer)
 		s.send_message(msg)
 		s.quit()
+	if NotifySNSTopic: # SNS notification
+		import boto3
+		sns = boto3.client('sns', aws_access_key_id=NotifySNSAccessKey, aws_secret_access_key=NotifySNSAccessSecret, region_name=NotifySNSRegion)
+		sns.publish(TopicArn=NotifySNSTopic, Subject='Healthstone checks: ' + title, Message=text)
+
 
 #
 # Update list of lost contacts
@@ -158,7 +173,6 @@ if 'REQUEST_METHOD' not in os.environ:
 	print("Checking probes...")
 	rows = queryDB("SELECT * FROM probes", [])
 	for row in rows:
-		# TODO: Handle other probe types
 		if row[2] == 0: # ICMP check
 			response = os.system("ping -c 1 -w2 " + row[1] + " > /dev/null")
 		else: # TCP check
@@ -231,6 +245,38 @@ if query.getvalue("output") and query.getvalue("name"):
 	else:
 		print("OK")
 	db.close()
+	quit(0)
+
+#
+# JSON API
+#
+if query.getvalue("api"):
+	output = {'status': "Ok."}
+	if not login:
+		output['status'] = "Error: Access code not provided."
+	elif query.getvalue("api") == "systems": # List systems
+		output['systems'] = []
+		rows = queryDB("SELECT * FROM systems ORDER BY time DESC", [])
+		for row in rows:
+			output['systems'].append({'ip': row[0], 'name': row[1], 'cpu': row[2], 'interval': row[3], 'alarms': row[4], 'details': row[5], 'time': row[6]})
+	elif query.getvalue("api") == "probes": # List probes
+		output['probes'] = []
+		rows = queryDB("SELECT * FROM probes", [])
+		for row in rows:
+			output['probes'].append({'name': row[0], 'ip': row[1], 'type': row[2]})
+	elif query.getvalue("api") == "lostcontact": # List lost contact
+		output['lostcontact'] = []
+		rows = queryDB("SELECT * FROM lostcontact", [])
+		for row in rows:
+			output['lostcontact'].append({'name': row[0]})
+	elif query.getvalue("api") == "log": # List log entries
+		output['log'] = []
+		rows = queryDB("SELECT * FROM log ORDER BY time DESC LIMIT 500", [])
+		for row in rows:
+			output['log'].append({'severity': row[0], 'name': row[1], 'event': row[2], 'time': row[3]})
+	else:
+		output['status'] = "Error: Unknown call."
+	print(json.dumps(output, sort_keys = False, indent = 4))
 	quit(0)
 
 #
@@ -359,7 +405,7 @@ else: # Main dashboard
 				print("<td><i class='fa fa-laptop'></i></td>")			
 			print("<td>" + row[0] + "</td><td>" + row[1] + "</td><td>")
 			if row[2] == -1:
-				print("PROBE")
+				print("-")
 			else:
 				print(str(row[2]) + "%")
 			print("</td><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])) + "</td><td><form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='name' value='" + row[1] + "'><input type='submit' class='btn ")
@@ -404,6 +450,6 @@ for line in f:
 	if query.getvalue("agents"):
 		print(line.replace("##VERSION##", VERSION).replace("##LINK##", "<a href='./'>Back to dashboard</a>"))
 	else:
-		print(line.replace("##VERSION##", VERSION).replace("##LINK##", "<a href='./?agents=1'>Configure agents</a>"))
+		print(line.replace("##VERSION##", VERSION).replace("##LINK##", "<a href='./?agents=1'>Settings</a>"))
 f.close()
 db.close()

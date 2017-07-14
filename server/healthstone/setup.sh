@@ -35,7 +35,7 @@ chown -R $wwwuser.$wwwuser $installdir/healthstone
 chmod 755 $installdir/healthstone/www/dashboard.py
 
 # Add crontab for probes
-echo "* Adding automations schedule for probes..."
+echo "* Adding automation schedule for probes..."
 crontab -l > /tmp/mycron
 if ! grep -q dashboard /tmp/mycron; then
 	echo "*/1 * * * * (cd $installdir/healthstone/www && ./dashboard.py > /dev/null)" >> /tmp/mycron
