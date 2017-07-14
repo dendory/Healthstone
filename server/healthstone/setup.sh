@@ -38,7 +38,7 @@ chmod 755 $installdir/healthstone/www/dashboard.py
 echo "* Adding automation schedule for probes..."
 crontab -l > /tmp/mycron
 if ! grep -q dashboard /tmp/mycron; then
-	echo "*/1 * * * * (cd $installdir/healthstone/www && ./dashboard.py > /dev/null)" >> /tmp/mycron
+	echo "*/1 * * * * $installdir/healthstone/www/dashboard.py > /dev/null" >> /tmp/mycron
 	crontab /tmp/mycron
 fi
 rm -f /tmp/mycron

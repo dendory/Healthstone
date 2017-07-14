@@ -1,49 +1,6 @@
 #!/usr/bin/env python3
 # Healthstone System Monitor - (C) 2015-2017 Patrick Lambert - http://healthstone.ca
 
-#
-# BEGIN CONFIGURATION
-#
-
-# Access code to access the dashboard [string]
-AccessCode = "1234"
-
-# Delete log entries after a week [True|False]
-DeleteOldEntries = False
-
-# Dark, large text theme for dashboard displays [True|False]
-DarkTheme = False
-
-# Send notifications for systems that lose contacts [True|False]
-NotifyOnLostContact = True
-
-# Send notifications for systems that raise alarms [True|False]
-NotifyOnAlarms = True
-
-# Send a Pushbullet notification using this API key [API key|False]
-NotifyPushbullet = False
-
-# Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]
-NotifyNodePointURL = False
-NotifyNodePointKey = "XXXXXXX"
-NotifyNodePointProduct = "1"
-NotifyNodePointRelease = "1.0"
-
-# Send an email notification using this SMTP server, To address, and From address [smtp server|False]
-NotifySMTPServer = False
-NotifySMTPFrom = "me@example.com"
-NotifySMTPTo = "you@example.com"
-
-# Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic urn|False]
-NotifySNSTopic = False
-NotifySNSAccessKey = ""
-NotifySNSAccessSecret = ""
-NotifySNSRegion = ""
-
-#
-# END CONFIGURATION
-#
-
 import sys
 import os
 import json
@@ -58,17 +15,42 @@ import smtplib
 import hashlib
 from email.mime.text import MIMEText
 
-VERSION = "2.0.6"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = False
 
-def sha256(msg):
-    return hashlib.sha256(str.encode(msg)).hexdigest()
+#
+# Set configuration
+#
+with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "config.json"), 'r') as fd:
+	data = fd.read()
+	cfg = json.loads(data)
+
+VERSION = "2.1.0"
+AccessCode = cfg['AccessCode']
+DeleteOldEntries = cfg['DeleteOldEntries']
+DarkTheme = cfg['DarkTheme']
+NotifyOnLostContact = cfg['NotifyOnLostContact']
+NotifyOnAlarms = cfg['NotifyOnAlarms']
+NotifyPushbullet = cfg['NotifyPushbullet']
+NotifyNodePointURL = cfg['NotifyNodePointURL']
+NotifyNodePointKey = cfg['NotifyNodePointKey']
+NotifyNodePointProduct = cfg['NotifyNodePointProduct']
+NotifyNodePointRelease = cfg['NotifyNodePointRelease']
+NotifySMTPServer = cfg['NotifySMTPServer']
+NotifySMTPFrom = cfg['NotifySMTPFrom']
+NotifySMTPTo = cfg['NotifySMTPTo']
+NotifySNSTopic = cfg['NotifySNSTopic']
+NotifySNSAccessKey = cfg['NotifySNSAccessKey']
+NotifySNSAccessSecret = cfg['NotifySNSAccessSecret']
+NotifySNSRegion = cfg['NotifySNSRegion']
 
 #
 # Headers
 #
+def sha256(msg):
+    return hashlib.sha256(str.encode(msg)).hexdigest()
+
 if query.getvalue("output") and query.getvalue("name"):
 	print("Content-Type: text/plain; charset=utf-8")	
 elif query.getvalue("api"):
@@ -93,7 +75,7 @@ print()
 # Database initialization
 #
 try:
-	db = sqlite3.connect("../db/dashboard.db")
+	db = sqlite3.connect(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "dashboard.db"))
 except:
 	print("Could not connect to database. Make sure this script has write access to the '../db/' folder.")
 	quit(1)
@@ -302,39 +284,71 @@ td
 {
 	display: none;
 }
+input
+{
+	color: #000000;
+}
 </style><br>
 """)
 
 if not login: # Login form
 	print("<p><form method='POST' action='.'><div class='row text-center'><div class='col-md-3'></div><div class='col-md-6'><input type='password' class='form-control' name='ac' placeholder='Access code'><br><input type='submit' class='btn btn-primary' value='Login'></div></div><div class='col-md-3'></div></form></p>")
 
-elif query.getvalue("agents"): # Agents/probes page
-	if query.getvalue("agents") == "2": # Add new probe
+elif query.getvalue("settings"): # Settings page
+	if query.getvalue("settings") == "2": # Add new probe
 		try:
 			execDB("INSERT INTO probes VALUES (?, ?, ?)", [cgi.escape(query.getvalue("probe-name")).replace('"', "'"), cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), int(query.getvalue("probe-type"))])
 			execDB("INSERT INTO systems VALUES(?, ?, -1, 60, 0, 'Probe', ?)", [cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), cgi.escape(query.getvalue("probe-name")).replace('"', "'"), now])
 			print("<p><center><b>Probe successfully added.</b></center></p>")
 		except:
 			print("<p><center><b>Could not add probe to the database.</b></center></p>")
-	if query.getvalue("agents") == "3": # Delete a probe
+	if query.getvalue("settings") == "3": # Delete a probe
 		try:
 			execDB("DELETE FROM probes WHERE ip = ? AND type = ?", [cgi.escape(query.getvalue("probe-ip")), int(query.getvalue("probe-type"))])
 			execDB("DELETE FROM systems WHERE ip = ? AND cpu = -1", [cgi.escape(query.getvalue("probe-ip"))])
 			print("<p><center><b>Probe successfully removed.</b></center></p>")
 		except:
 			print("<p><center><b>Could not remove probe from the database.</b></center></p>")
-	f = open("agents.html", "r")
+	f = open("settings.html", "r")
 	for line in f:
 		print(line)
 	f.close()
-	print("<p><h4>Add a new probe:</h4><div class='row'><form method='POST' action='./'><input type='hidden' name='agents' value='2'><div class='col-sm-3'><input type='text' name='probe-name' placeholder='Name' class='form-control' required></div><div class='col-sm-3'><input type='text' name='probe-ip' placeholder='IP address' class='form-control' required></div><div class='col-sm-3'><select name='probe-type' class='form-control'><option value=0>ICMP</option><option value=80>HTTP</option><option value=443>HTTPS</option><option value=22>SSH</option><option value=3389>RDP</option></select></div><div class='col-sm-3'><input type='submit' value='Add' class='form-control'></div></div></p>")
+	print("<p><h4>Add a new probe:</h4><div class='row'><form method='POST' action='./'><input type='hidden' name='settings' value='2'><div class='col-sm-3'><input type='text' name='probe-name' placeholder='Name' class='form-control' required></div><div class='col-sm-3'><input type='text' name='probe-ip' placeholder='IP address' class='form-control' required></div><div class='col-sm-3'><select name='probe-type' class='form-control'><option value=0>ICMP</option><option value=80>HTTP</option><option value=443>HTTPS</option><option value=22>SSH</option><option value=3389>RDP</option></select></div><div class='col-sm-3'><input type='submit' value='Add' class='form-control btn btn-primary'></form></div></div></p>")
 	print("<p><table class='table table-striped' id='probes'><thead><tr><th>Name</th><th>IP</th><th>Type</th></thead><tbody>")
 	rows = queryDB("SELECT * FROM probes ORDER BY name", [])
 	for row in rows:
-		print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "<a style='float:right' href=\"./?agents=3&probe-ip=" + cgi.escape(row[1]) + "&probe-type=" + str(row[2]) + "\"><font color='red'><b>X</b></font></a></td></tr>")
+		print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "<a style='float:right' href=\"./?settings=3&probe-ip=" + cgi.escape(row[1]) + "&probe-type=" + str(row[2]) + "\"><font color='red'><b>X</b></font></a></td></tr>")
 	print("</tbody></table></p>")
 	if not DarkTheme:
 		print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
+	print("<hr><h2>Settings</h2><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
+	print("<h4>Access code to access the dashboard [string]</h4>")
+	print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"" + str(AccessCode) + "\"></div></div>")
+	print("<h4>Delete log entries after a week [True|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>DeleteOldEntries</div><div class='col-sm-5'><input class='form-control' type='text' name='DeleteOldEntries' value=\"" + str(DeleteOldEntries) + "\"></div></div>")
+	print("<h4>Dark, large text theme for dashboard displays [True|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"" + str(DarkTheme) + "\"></div></div>")
+	print("<h4>Send notifications for systems that lose contacts [True|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(NotifyOnLostContact) + "\"></div></div>")
+	print("<h4>Send notifications for systems that raise alarms [True|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"" + str(NotifyOnAlarms) + "\"></div></div>")
+	print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"" + str(NotifyPushbullet) + "\"></div></div>")
+	print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>NotifyNodePointURL</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointURL' value=\"" + str(NotifyNodePointURL) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifyNodePointKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointKey' value=\"" + str(NotifyNodePointKey) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifyNodePointProduct</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointProduct' value=\"" + str(NotifyNodePointProduct) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifyNodePointRelease</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointRelease' value=\"" + str(NotifyNodePointRelease) + "\"></div></div>")
+	print("<h4>Send an email notification using this SMTP server, To address, and From address [smtp server|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>NotifySMTPServer</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPServer' value=\"" + str(NotifySMTPServer) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifySMTPTo</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPTo' value=\"" + str(NotifySMTPTo) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifySMTPFrom</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPFrom' value=\"" + str(NotifySMTPFrom) + "\"></div></div>")
+	print("<h4>Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic urn|False]</h4>")
+	print("<div class='row'><div class='col-sm-3'>NotifySNSTopic</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSTopic' value=\"" + str(NotifySNSTopic) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"" + str(NotifySNSAccessKey) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"" + str(NotifySNSAccessSecret) + "\"></div></div>")
+	print("<div class='row'><div class='col-sm-3'>NotifySNSRegion</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSRegion' value=\"" + str(NotifySNSRegion) + "\"></div></div>")
+	print("<p><input type='submit' class='btn btn-primary' value='Save settings'></form></p>")
 
 else: # Main dashboard
 	if query.getvalue("ip") and query.getvalue("delete"): # delete an entry
@@ -447,9 +461,9 @@ else: # Main dashboard
 
 f = open("bottom.html", "r")
 for line in f:
-	if query.getvalue("agents"):
+	if query.getvalue("settings"):
 		print(line.replace("##VERSION##", VERSION).replace("##LINK##", "<a href='./'>Back to dashboard</a>"))
 	else:
-		print(line.replace("##VERSION##", VERSION).replace("##LINK##", "<a href='./?agents=1'>Settings</a>"))
+		print(line.replace("##VERSION##", VERSION).replace("##LINK##", "<a href='./?settings=1'>Settings</a>"))
 f.close()
 db.close()

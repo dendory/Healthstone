@@ -17,10 +17,11 @@ Installation procedure
 ======================
 
 * Ensure the required software is installed (Python 3.x, along with Apache for Linux or IIS for Windows).
-* Download healthstone.zip onto your server and unzip it where you want the files to live, for example C:\healthstone.
-* Edit www/dashboard.py and configure the access code and notification settings you want.
-* Run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
-* Log into the dashboard using a web browser, then click on 'Configure agents' to download the agent packages.
+* Download healthstone.zip onto your server and run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
+* Edit 'db/config.json' and check the default settings.
+* Log into the dashboard using a web browser, then click on 'Settings' to configure settings and download the agent packages.
+
+The default access code is '1234'.
 
 
 Templates
