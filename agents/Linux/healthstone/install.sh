@@ -21,7 +21,10 @@ fi
 cp healthstone.py /usr/bin/healthstone.py
 chmod +x /usr/bin/healthstone.py
 if ! grep -q healthstone /etc/rc.local; then
-        echo "/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &" >> /etc/rc.local
+		echo "if ! pgrep -f \"healthstone.py\" > /dev/null" >> /etc/rc.local
+		echo "then" >> /etc/rc.local
+        echo " /usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &" >> /etc/rc.local
+		echo "fi" >> /etc/rc.local
         chmod +x /etc/rc.local
 fi
 
