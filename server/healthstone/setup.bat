@@ -21,7 +21,7 @@ echo.
 echo * Restarting IIS
 iisreset
 echo * Adding scheduled task
-schtasks /create /tn "Healthstone Probe Automation" /sc minute /mo 5 /tr "(cd %CD%\www && python.exe dashboard.py)" /ru "SYSTEM" /f
+schtasks /create /tn "Healthstone Probe Automation" /sc minute /mo 1 /tr "python.exe %CD%\www\dashboard.py" /ru "SYSTEM" /f
 echo.
 echo You can view the dashboard at: http://localhost/healthstone
 echo.
