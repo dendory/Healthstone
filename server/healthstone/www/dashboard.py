@@ -320,7 +320,7 @@ elif query.getvalue("settings"): # Settings page
 	print("</tbody></table></p>")
 	if not cfg['DarkTheme']:
 		print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
-	print("<hr><h2>Settings</h2><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
+	print("<hr><h3>Settings</h3><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
 	print("<h4>Access code to access the dashboard [string]</h4>")
 	print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"" + str(cfg['AccessCode']) + "\"></div></div>")
 	print("<h4>Delete log entries after a week [True|False]</h4>")
