@@ -1,0 +1,21 @@
+{
+	"AccessCode": "1234",
+	"AdminAccessCode": "1234",
+	"DeleteOldEntries": false,
+	"DarkTheme": false,
+	"SearchableDashboard": true,
+	"NotifyOnLostContact": true,
+	"NotifyOnAlarms": true,
+	"NotifyPushbullet": false,
+	"NotifyNodePointURL": false,
+	"NotifyNodePointKey": "XXXXXXX",
+	"NotifyNodePointProduct": "1",
+	"NotifyNodePointRelease": "1.0",
+	"NotifySMTPServer": false,
+	"NotifySMTPFrom": "me@example.com",
+	"NotifySMTPTo": "you@example.com",
+	"NotifySNSTopic": false,
+	"NotifySNSAccessKey": "",
+	"NotifySNSAccessSecret": "",
+	"NotifySNSRegion": ""
+}
