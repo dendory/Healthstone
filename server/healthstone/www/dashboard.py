@@ -18,12 +18,12 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
+VERSION = "2.1.1"
 query = cgi.FieldStorage()
 now = int(time.time())
-login = False
+login = None
 cfgfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "config.json")
 dbfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "dashboard.db")
-VERSION = "2.1.0"
 with open(cfgfile, 'r') as fd:
 	data = fd.read()
 	cfg = json.loads(data)
@@ -42,16 +42,21 @@ else:
 	print("Content-Type: text/html; charset=utf-8")
 
 if query.getvalue("ac"): # Login from form
-	if query.getvalue("ac") == cfg['AccessCode']:
+	if query.getvalue("ac") == cfg['AdminAccessCode']:
+		print("Set-Cookie: ac=" + sha256(cfg['AdminAccessCode']))
+		login = 2
+	elif query.getvalue("ac") == cfg['AccessCode']:
 		print("Set-Cookie: ac=" + sha256(cfg['AccessCode']))
-		login = True
+		login = 1
 if 'HTTP_COOKIE' in os.environ: # Login from cookies
 	cookies = os.environ['HTTP_COOKIE']
 	cookies = cookies.split('; ')
 	for cookie in cookies:
 		cookie = cookie.split('=')
-		if cookie[0] == 'ac' and cookie[1] == sha256(cfg['AccessCode']):
-			login = True
+		if cookie[0] == 'ac' and cookie[1] == sha256(cfg['AdminAccessCode']):
+			login = 2
+		elif cookie[0] == 'ac' and cookie[1] == sha256(cfg['AccessCode']):
+			login = 1
 print()
 
 #
@@ -278,21 +283,21 @@ if not login: # Login form
 	print("<p><form method='POST' action='.'><div class='row text-center'><div class='col-md-3'></div><div class='col-md-6'><input type='password' class='form-control' name='ac' placeholder='Access code'><br><input type='submit' class='btn btn-primary' value='Login'></div></div><div class='col-md-3'></div></form></p>")
 
 elif query.getvalue("settings"): # Settings page
-	if query.getvalue("settings") == "2": # Add new probe
+	if query.getvalue("settings") == "2" and login == 2: # Add new probe
 		try:
 			execDB("INSERT INTO probes VALUES (?, ?, ?)", [cgi.escape(query.getvalue("probe-name")).replace('"', "'"), cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), int(query.getvalue("probe-type"))])
 			execDB("INSERT INTO systems VALUES(?, ?, -1, 60, 0, 'Probe', ?)", [cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), cgi.escape(query.getvalue("probe-name")).replace('"', "'"), now])
 			print("<p><center><b>Probe successfully added.</b></center></p>")
 		except:
 			print("<p><center><b>Could not add probe to the database.</b></center></p>")
-	if query.getvalue("settings") == "3": # Delete a probe
+	if query.getvalue("settings") == "3" and login == 2: # Delete a probe
 		try:
 			execDB("DELETE FROM probes WHERE ip = ? AND type = ?", [cgi.escape(query.getvalue("probe-ip")), int(query.getvalue("probe-type"))])
 			execDB("DELETE FROM systems WHERE ip = ? AND cpu = -1", [cgi.escape(query.getvalue("probe-ip"))])
 			print("<p><center><b>Probe successfully removed.</b></center></p>")
 		except:
 			print("<p><center><b>Could not remove probe from the database.</b></center></p>")
-	if query.getvalue("settings") == "4": # Save settings
+	if query.getvalue("settings") == "4" and login == 2: # Save settings
 		for k,v in cfg.items():
 			if not query.getvalue(k):
 				cfg[k] = ""
@@ -312,45 +317,47 @@ elif query.getvalue("settings"): # Settings page
 	for line in f:
 		print(line)
 	f.close()
-	print("<p><h4>Add a new probe:</h4><div class='row'><form method='POST' action='./'><input type='hidden' name='settings' value='2'><div class='col-sm-3'><input type='text' name='probe-name' placeholder='Name' class='form-control' required></div><div class='col-sm-3'><input type='text' name='probe-ip' placeholder='IP address' class='form-control' required></div><div class='col-sm-3'><select name='probe-type' class='form-control'><option value=0>ICMP</option><option value=80>HTTP</option><option value=443>HTTPS</option><option value=22>SSH</option><option value=3389>RDP</option></select></div><div class='col-sm-3'><input type='submit' value='Add' class='form-control btn btn-primary'></form></div></div></p>")
-	print("<p><table class='table table-striped' id='probes'><thead><tr><th>Name</th><th>IP</th><th>Type</th></thead><tbody>")
-	rows = queryDB("SELECT * FROM probes ORDER BY name", [])
-	for row in rows:
-		print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "<a style='float:right' href=\"./?settings=3&probe-ip=" + cgi.escape(row[1]) + "&probe-type=" + str(row[2]) + "\"><font color='red'><b>X</b></font></a></td></tr>")
-	print("</tbody></table></p>")
-	if not cfg['DarkTheme']:
-		print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
-	print("<hr><h3>Settings</h3><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
-	print("<h4>Access code to access the dashboard [string]</h4>")
-	print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"" + str(cfg['AccessCode']) + "\"></div></div>")
-	print("<h4>Delete log entries after a week [True|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>DeleteOldEntries</div><div class='col-sm-5'><input class='form-control' type='text' name='DeleteOldEntries' value=\"" + str(cfg['DeleteOldEntries']) + "\"></div></div>")
-	print("<h4>Dark, large text theme for dashboard displays [True|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"" + str(cfg['DarkTheme']) + "\"></div></div>")
-	print("<h4>Send notifications for systems that lose contacts [True|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(cfg['NotifyOnLostContact']) + "\"></div></div>")
-	print("<h4>Send notifications for systems that raise alarms [True|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"" + str(cfg['NotifyOnAlarms']) + "\"></div></div>")
-	print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"" + str(cfg['NotifyPushbullet']) + "\"></div></div>")
-	print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>NotifyNodePointURL</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointURL' value=\"" + str(cfg['NotifyNodePointURL']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifyNodePointKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointKey' value=\"" + str(cfg['NotifyNodePointKey']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifyNodePointProduct</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointProduct' value=\"" + str(cfg['NotifyNodePointProduct']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifyNodePointRelease</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointRelease' value=\"" + str(cfg['NotifyNodePointRelease']) + "\"></div></div>")
-	print("<h4>Send an email notification using this SMTP server, To address, and From address [smtp server|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>NotifySMTPServer</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPServer' value=\"" + str(cfg['NotifySMTPServer']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifySMTPTo</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPTo' value=\"" + str(cfg['NotifySMTPTo']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifySMTPFrom</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPFrom' value=\"" + str(cfg['NotifySMTPFrom']) + "\"></div></div>")
-	print("<h4>Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic urn|False]</h4>")
-	print("<div class='row'><div class='col-sm-3'>NotifySNSTopic</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSTopic' value=\"" + str(cfg['NotifySNSTopic']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"" + str(cfg['NotifySNSAccessKey']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"" + str(cfg['NotifySNSAccessSecret']) + "\"></div></div>")
-	print("<div class='row'><div class='col-sm-3'>NotifySNSRegion</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSRegion' value=\"" + str(cfg['NotifySNSRegion']) + "\"></div></div>")
-	print("<p><input type='submit' class='btn btn-primary' value='Save settings'></form></p>")
+	if login == 2:
+		print("<p><h4>Add a new probe:</h4><div class='row'><form method='POST' action='./'><input type='hidden' name='settings' value='2'><div class='col-sm-3'><input type='text' name='probe-name' placeholder='Name' class='form-control' required></div><div class='col-sm-3'><input type='text' name='probe-ip' placeholder='IP address' class='form-control' required></div><div class='col-sm-3'><select name='probe-type' class='form-control'><option value=0>ICMP</option><option value=80>HTTP</option><option value=443>HTTPS</option><option value=22>SSH</option><option value=3389>RDP</option></select></div><div class='col-sm-3'><input type='submit' value='Add' class='form-control btn btn-primary'></form></div></div></p>")
+		print("<p><table class='table table-striped' id='probes'><thead><tr><th>Name</th><th>IP</th><th>Type</th></thead><tbody>")
+		rows = queryDB("SELECT * FROM probes ORDER BY name", [])
+		for row in rows:
+			print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "<a style='float:right' href=\"./?settings=3&probe-ip=" + cgi.escape(row[1]) + "&probe-type=" + str(row[2]) + "\"><font color='red'><b>X</b></font></a></td></tr>")
+		print("</tbody></table></p>")
+		if not cfg['DarkTheme']:
+			print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
+		print("<hr><h3>Settings</h3><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
+		print("<h4>Access codes to access the dashboard and change settings [string]</h4>")
+		print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"" + str(cfg['AccessCode']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>AdminAccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AdminAccessCode' value=\"" + str(cfg['AdminAccessCode']) + "\"></div></div>")
+		print("<h4>Delete log entries after a week [True|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>DeleteOldEntries</div><div class='col-sm-5'><input class='form-control' type='text' name='DeleteOldEntries' value=\"" + str(cfg['DeleteOldEntries']) + "\"></div></div>")
+		print("<h4>Dark, large text theme for dashboard displays [True|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"" + str(cfg['DarkTheme']) + "\"></div></div>")
+		print("<h4>Send notifications for systems that lose contacts [True|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(cfg['NotifyOnLostContact']) + "\"></div></div>")
+		print("<h4>Send notifications for systems that raise alarms [True|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"" + str(cfg['NotifyOnAlarms']) + "\"></div></div>")
+		print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"" + str(cfg['NotifyPushbullet']) + "\"></div></div>")
+		print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifyNodePointURL</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointURL' value=\"" + str(cfg['NotifyNodePointURL']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifyNodePointKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointKey' value=\"" + str(cfg['NotifyNodePointKey']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifyNodePointProduct</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointProduct' value=\"" + str(cfg['NotifyNodePointProduct']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifyNodePointRelease</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointRelease' value=\"" + str(cfg['NotifyNodePointRelease']) + "\"></div></div>")
+		print("<h4>Send an email notification using this SMTP server, To address, and From address [smtp server|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifySMTPServer</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPServer' value=\"" + str(cfg['NotifySMTPServer']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifySMTPTo</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPTo' value=\"" + str(cfg['NotifySMTPTo']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifySMTPFrom</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPFrom' value=\"" + str(cfg['NotifySMTPFrom']) + "\"></div></div>")
+		print("<h4>Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic urn|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifySNSTopic</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSTopic' value=\"" + str(cfg['NotifySNSTopic']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"" + str(cfg['NotifySNSAccessKey']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"" + str(cfg['NotifySNSAccessSecret']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifySNSRegion</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSRegion' value=\"" + str(cfg['NotifySNSRegion']) + "\"></div></div>")
+		print("<p><input type='submit' class='btn btn-primary' value='Save settings'></form></p>")
 
 else: # Main dashboard
-	if query.getvalue("ip") and query.getvalue("delete"): # delete an entry
+	if query.getvalue("ip") and query.getvalue("delete") and login == 2: # delete an entry
 		execDB("DELETE FROM systems WHERE ip = ? AND name = ?", [query.getvalue("ip"), query.getvalue("delete")])
 		print("<p><center><b>The specified system has been removed from the list.</b></center></p>")
 
@@ -402,7 +409,9 @@ else: # Main dashboard
 					print("<center><i class='fa fa-info'></i></center>")
 				print("</td><td>" + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row2[3])) + "</td><td>" + str(row2[2]).replace("\n"," ") + "</td></tr>")
 			print("</tbody></table><script>$(document).ready(function(){$('#events').DataTable({'order':[[1,'desc']]});});</script>")
-			print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form></div></div>")
+			if login == 2:
+				print("<form method='GET' action='.'><input type='hidden' name='ip' value='" + row[0] + "'><input type='hidden' name='delete' value='" + row[1] + "'><input type='submit' class='btn btn-danger' value='Remove system'></form>")
+			print("</div></div>")
 
 	else: # list of systems
 		# Large screens
