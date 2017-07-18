@@ -130,11 +130,11 @@ rows = queryDB("SELECT * FROM systems", [])
 for row in rows:
 	if (row[6] + row[3] * 2 + 15) < time.time() and row[1] not in lostcontact:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
-		if cfg['DeleteOldEntries']:
-			execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
 		if cfg['NotifyOnLostContact']:
 			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
+if cfg['DeleteOldEntries']:
+	execDB("DELETE FROM log WHERE time < ?", [now - 604800])
 
 #
 # If run from command line, only check probes
@@ -324,16 +324,16 @@ elif query.getvalue("settings"): # Settings page
 		for row in rows:
 			print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "<a style='float:right' href=\"./?settings=3&probe-ip=" + cgi.escape(row[1]) + "&probe-type=" + str(row[2]) + "\"><font color='red'><b>X</b></font></a></td></tr>")
 		print("</tbody></table></p>")
-		if not cfg['DarkTheme']:
-			print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
+		print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
 		print("<hr><h3>Settings</h3><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
 		print("<h4>Access codes to access the dashboard and change settings [string]</h4>")
 		print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"" + str(cfg['AccessCode']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>AdminAccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AdminAccessCode' value=\"" + str(cfg['AdminAccessCode']) + "\"></div></div>")
 		print("<h4>Delete log entries after a week [True|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>DeleteOldEntries</div><div class='col-sm-5'><input class='form-control' type='text' name='DeleteOldEntries' value=\"" + str(cfg['DeleteOldEntries']) + "\"></div></div>")
-		print("<h4>Dark, large text theme for dashboard displays [True|False]</h4>")
+		print("<h4>Dashboard theme and table style [True|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"" + str(cfg['DarkTheme']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>SearchableDashboard</div><div class='col-sm-5'><input class='form-control' type='text' name='SearchableDashboard' value=\"" + str(cfg['SearchableDashboard']) + "\"></div></div>")
 		print("<h4>Send notifications for systems that lose contacts [True|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(cfg['NotifyOnLostContact']) + "\"></div></div>")
 		print("<h4>Send notifications for systems that raise alarms [True|False]</h4>")
@@ -349,7 +349,7 @@ elif query.getvalue("settings"): # Settings page
 		print("<div class='row'><div class='col-sm-3'>NotifySMTPServer</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPServer' value=\"" + str(cfg['NotifySMTPServer']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifySMTPTo</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPTo' value=\"" + str(cfg['NotifySMTPTo']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifySMTPFrom</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPFrom' value=\"" + str(cfg['NotifySMTPFrom']) + "\"></div></div>")
-		print("<h4>Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic urn|False]</h4>")
+		print("<h4>Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic arn|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>NotifySNSTopic</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSTopic' value=\"" + str(cfg['NotifySNSTopic']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"" + str(cfg['NotifySNSAccessKey']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"" + str(cfg['NotifySNSAccessSecret']) + "\"></div></div>")
@@ -439,7 +439,7 @@ else: # Main dashboard
 				print("btn-success' value='Ok'>")
 			print("</form></td></tr>")	
 		print("</tbody></table>")
-		if not cfg['DarkTheme']:
+		if cfg['SearchableDashboard']:
 			print("<script>$(document).ready(function(){$('#systems').DataTable({'order':[[4,'desc']]});});</script>")	
 
 		# Small screens
