@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.1"
+VERSION = "2.1.2"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None
@@ -117,7 +117,8 @@ def notify(title, text):
 		import boto3
 		sns = boto3.client('sns', aws_access_key_id=cfg['NotifySNSAccessKey'], aws_secret_access_key=cfg['NotifySNSAccessSecret'], region_name=cfg['NotifySNSRegion'])
 		sns.publish(TopicArn=cfg['NotifySNSTopic'], Subject='Healthstone checks: ' + title, Message=text)
-
+	if cfg['NotifyScript']: # Run command line
+		result = os.popen(cfg['NotifyScript'] + " \"" + text + "\"").read()
 
 #
 # Update list of lost contacts
@@ -187,11 +188,11 @@ if query.getvalue("output") and query.getvalue("name"):
 	rows = queryDB("SELECT * FROM systems WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	for row in rows:
 		if row[4] == 0 and alarm == 1:
-			if cfg['DeleteOldEntries']:
-				execDB("DELETE FROM log WHERE name = ? AND time < ?", [row[1], now - 604800])
 			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], cgi.escape(query.getvalue("output")), now])
 			if cfg['NotifyOnAlarms']:
 				notify("Alarms raised on " + row[1], cgi.escape(query.getvalue("output")))
+			if cfg['NotifyOnIPChange'] and os.environ["REMOTE_ADDR"] != row[0]:
+				notify("IP changed on " + row[1], "The IP address changed on " + row[1] + "\nOld: " + row[0] + "\nNew: " + os.environ["REMOTE_ADDR"])
 		found = True
 	if found:
 		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, cgi.escape(query.getvalue("output")), now, os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name"))])
@@ -334,10 +335,11 @@ elif query.getvalue("settings"): # Settings page
 		print("<h4>Dashboard theme and table style [True|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"" + str(cfg['DarkTheme']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>SearchableDashboard</div><div class='col-sm-5'><input class='form-control' type='text' name='SearchableDashboard' value=\"" + str(cfg['SearchableDashboard']) + "\"></div></div>")
-		print("<h4>Send notifications for systems that lose contacts [True|False]</h4>")
+		print("<h4>Send notifications for systems that lose contact, raise alarms, or change IP [True|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(cfg['NotifyOnLostContact']) + "\"></div></div>")
-		print("<h4>Send notifications for systems that raise alarms [True|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"" + str(cfg['NotifyOnAlarms']) + "\"></div></div>")
+		print("<div class='row'><div class='col-sm-3'>NotifyOnIPChange</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnIPChange' value=\"" + str(cfg['NotifyOnIPChange']) + "\"></div></div>")
+
 		print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"" + str(cfg['NotifyPushbullet']) + "\"></div></div>")
 		print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
@@ -354,6 +356,8 @@ elif query.getvalue("settings"): # Settings page
 		print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"" + str(cfg['NotifySNSAccessKey']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"" + str(cfg['NotifySNSAccessSecret']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifySNSRegion</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSRegion' value=\"" + str(cfg['NotifySNSRegion']) + "\"></div></div>")
+		print("<h4>Run a custom script or application [Command line|False]</h4>")
+		print("<div class='row'><div class='col-sm-3'>NotifyScript</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyScript' value=\"" + str(cfg['NotifyScript']) + "\"></div></div>")
 		print("<p><input type='submit' class='btn btn-primary' value='Save settings'></form></p>")
 
 else: # Main dashboard
