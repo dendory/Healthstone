@@ -17,7 +17,7 @@
 			<h3>Templates configuration</h3>
 			<p>Templates are flat files stored on the dashboard server which provides configuration information to agents. You can make as many templates as you want. Each template lists a number of modules that you wish the agents to process. Only the [General] section is mandatory, but each section kept must have all its keys listed. Do not use quotes or multiple lines for key values. Templates are not saved on hosts, each agent will fetch its specific template on every poll. Template filenames must contain only alphanumeric characters and end with <i>.template</i>. The same template can be used for Windows and Linux agents, although you may want to create multiple templates and divide them according to your network needs, such as a template for Windows servers, one for workstations, one for Linux, etc.</p>
 
-%TEMPLATES%
+##TEMPLATES##
 
 			<hr>
 			<h3>API</h3>
@@ -32,7 +32,7 @@
 			<h3>Probes</h3>
 			<p>Probes are simple heartbeats that can be configured against specific hosts where you do not want to or cannot install agents. These probes do not provide as much information as the agents do, they simply check whether a host is up or down. Each probe can be configured to check whether the host is up using a number of methods, including an ICMP ping request, a TCP connection on the HTTP or HTTPS port, a SSH connection or a RDP connection.</p>
 
-%PROBES%
+##PROBES##
 
-%SETTINGS%
+##SETTINGS##
 
