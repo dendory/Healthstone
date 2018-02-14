@@ -339,7 +339,6 @@ elif query.getvalue("settings"): # Settings page
 		print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(cfg['NotifyOnLostContact']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"" + str(cfg['NotifyOnAlarms']) + "\"></div></div>")
 		print("<div class='row'><div class='col-sm-3'>NotifyOnIPChange</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnIPChange' value=\"" + str(cfg['NotifyOnIPChange']) + "\"></div></div>")
-
 		print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
 		print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"" + str(cfg['NotifyPushbullet']) + "\"></div></div>")
 		print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
