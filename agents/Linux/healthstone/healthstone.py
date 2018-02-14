@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015-2017 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - http://healthstone.ca
 
 import subprocess
 import urllib.request

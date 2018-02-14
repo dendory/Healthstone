@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015-2017 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - http://healthstone.ca
 
 import sys
 import os
@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.2"
+VERSION = "2.1.3"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None

@@ -1,5 +1,5 @@
 //
-// Healthstone System Monitor - (C) 2015-2017 Patrick Lambert - http://healthstone.ca
+// Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - http://healthstone.ca
 //
 
 using System;
@@ -26,8 +26,8 @@ using System.Linq;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
-[assembly: AssemblyCopyright("(C) 2017 Patrick Lambert")]
-[assembly: AssemblyFileVersion("2.0.5.0")]
+[assembly: AssemblyCopyright("(C) 2015-2018 Patrick Lambert")]
+[assembly: AssemblyFileVersion("2.1.3.0")]
 
 namespace Healthstone
 {
@@ -254,7 +254,6 @@ namespace Healthstone
 							alarms += 1;
 						}
 						else if(cfg["general"]["verbose"] == "true") { output += "[CheckMemory] Free physical memory: " + (Int32.Parse(items["FreePhysicalMemory"].ToString()) / 1000) + " MB.\n"; }
-
 					}
 				}
 				catch (Exception e)
@@ -355,6 +354,26 @@ namespace Healthstone
 				catch (Exception e)
 				{
 					output += "--> [CheckDiskSpace] WMI Query failure: " + e + "\n";
+					alarms += 1;
+				}
+			}
+
+			if(cfg.ContainsKey("checkdomain"))  // check domnain joined
+			{
+				try
+				{
+					string domain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
+					if(string.Compare(domain.ToLower(), cfg["checkdomain"]["domain"].ToLower()) != 0)
+					{
+						output +=  "--> [CheckDomain] System domain mismatch: " + domain + "\n";
+						alarms += 1;
+					}
+
+					else if(cfg["general"]["verbose"] == "true") { output += "[CheckDomain] System domain: " + domain + "\n"; }
+				}
+				catch (Exception e)
+				{
+					output += "--> [CheckDomain] Domain query failure: " + e + "\n";
 					alarms += 1;
 				}
 			}
@@ -524,7 +543,6 @@ namespace Healthstone
 					alarms += 1;
 				}
 			}
-
 
 			// Notifications
 			if(alarms > 1) { output += "\nChecks completed with " + alarms.ToString() + " alarms raised.\n"; }

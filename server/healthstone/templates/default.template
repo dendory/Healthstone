@@ -39,3 +39,6 @@ status: Automatic		# Updates must be set to "Automatic", "Disabled" or "Manual"
 
 [CheckFirewall]
 require: Public			# Space separated list of realms to check: "Domain", "Public" and "Private"
+
+[CheckDomain]
+domain: WORKGROUP		# Domain name the system must be joined to
