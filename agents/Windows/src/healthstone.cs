@@ -27,7 +27,7 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Healthstone System Monitor")]
 [assembly: AssemblyCopyright("(C) 2015-2018 Patrick Lambert")]
-[assembly: AssemblyFileVersion("2.1.3.0")]
+[assembly: AssemblyFileVersion("2.1.4.0")]
 
 namespace Healthstone
 {
@@ -328,6 +328,40 @@ namespace Healthstone
 				catch (Exception e)
 				{
 					output += "--> [CheckProcesses] WMI Query failure: " + e + "\n";
+					alarms += 1;
+				}
+			}
+
+			if(cfg.ContainsKey("checkav"))  // check for an anti virus
+			{
+				try
+				{
+					wmi = new ManagementObjectSearcher("root\\SecurityCenter2", "SELECT * FROM AntivirusProduct");
+					ManagementObjectCollection instances = wmi.Get();
+					if(instances.Count == 0)
+					{
+						output += "--> [CheckAV] No anti virus product installed.\n";
+						alarms += 1;
+					}
+					else
+					{
+						foreach(ManagementObject items in instances)
+						{
+							if(string.Compare(items["displayName"].ToString().ToLower(), cfg["checkav"]["require"]) != 0)
+							{
+								output += "--> [CheckAV] Wrong anti virus product: " + items["displayName"] + "\n";
+								alarms += 1;
+							}
+							else if(cfg["general"]["verbose"] == "true")
+							{
+								output +=  "[CheckAV] " + items["displayName"] + "\n";
+							}
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					output += "--> [CheckAV] WMI Query failure: " + e + "\n";
 					alarms += 1;
 				}
 			}

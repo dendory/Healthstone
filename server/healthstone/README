@@ -91,7 +91,7 @@ lodctr /r.
 
 * Why is the Linux agent not running/stopped unexpectingly?
 
-Check the log at /var/log/healthstone.log for hints as to why it stopped. Try to run the agent manually. The agent is set to run automatically on 
+Check the log at /var/log/messages for hints as to why it stopped. Try to run the agent manually. The agent is set to run automatically on 
 boot from /etc/rc.local.
 
 * Agents are not reporting any check or losing contact after a template change?

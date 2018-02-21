@@ -42,3 +42,6 @@ require: Public			# Space separated list of realms to check: "Domain", "Public" 
 
 [CheckDomain]
 domain: WORKGROUP		# Domain name the system must be joined to
+
+[CheckAV]
+require: Microsoft Security Essentials  # Require a specific AV product to be installed
