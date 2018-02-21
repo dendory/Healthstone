@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - http://healthstone.ca
 
-import subprocess
+import logging
+import logging.handlers
 import urllib.request
 import urllib.parse
+import subprocess
 import time
 import sys
 import os
@@ -12,8 +14,15 @@ if len(sys.argv) < 3:
 	print("* Syntax: healthstone.py <dashboard url> <template name>")
 	quit(1)
 cfg = {"general": {"interval": 30, "verbose": "true", "debug": "true", "dashboard": sys.argv[1], "template": sys.argv[2]}}
-print("* Healthstone System Monitor - Dashboard set to " + cfg['general']['dashboard'])
+
+
 criterr = ""
+log = logging.getLogger("healthstone")
+handler = logging.handlers.SysLogHandler(address = '/dev/log')
+log.addHandler(handler)
+log.setLevel(logging.DEBUG)
+log.info("Healthstone System Monitor starting - Dashboard=" + cfg['general']['dashboard'] + ", Template=" + cfg['general']['template'])
+print("* Healthstone System Monitor starting - Dashboard=" + cfg['general']['dashboard'] + ", Template=" + cfg['general']['template'])
 
 while True:
 	try:
@@ -171,21 +180,23 @@ while True:
 				output += "--> [CheckNetwork] Error pinging host: " + str(b) + "\n"
 
 		# Send results off
-		if alarms > 1:
+		if alarms > 0:
 			output += "\nChecks completed with " + str(alarms) + " alarms raised.\n"
+			log.critical("Healthstone checks failed: " + output)
 		else:
-			output += "\nChecks completed with " + str(alarms) + " alarm raised.\n"
-		print("* Output:\n" + output)
+			output += "\nChecks completed without any alarm raised.\n"
+			if cfg['general']['debug'] == 'true':
+				log.debug("Healthstone checks succeeded: " + output)
 
 		data = "alarms=" + str(alarms) + "&cpu=" + str(cpu) + "&name=" + urllib.parse.quote(hostname, '') + "&template=" + urllib.parse.quote(cfg['general']['template'], '') + "&output=" + urllib.parse.quote(output, '') + "&interval=" + str(cfg['general']['interval'])
 		result = urllib.request.urlopen(cfg['general']['dashboard'] + "/?" + data).read().decode('utf8')
 
 		if "[general]" not in str(result).lower():
-			criterr = "Error: Invalid template received from dashboard. Configuration reset.\n"
-			print("* " + criterr)
+			criterr = "Healthstone encountered a critical error. Invalid template received from dashboard. Configuration reset.\n"
+			log.critical(criterr)
 		else:
 			if cfg['general']['debug'] == 'true':
-				print("* Template received by dashboard:\n" + result)
+				log.debug("Healthstone received the following template from the dashboard:\n" + result)
 			dashboard = cfg['general']['dashboard']
 			template = cfg['general']['template']
 			cfg = {}
@@ -211,9 +222,10 @@ while True:
 			cfg['general']['template'] = template
 	except:
 		a, b, c = sys.exc_info()
-		criterr = "A critical error occurred. Configuration reset: " + str(b) + "\n"
-		print("* " + criterr)
+		criterr = "Healthstone has encountered a critical error. Configuration reset: " + str(b) + "\n"
+		log.critical(criterr)
 		cfg = {"general": {"interval": 30, "verbose": "true", "debug": "true", "dashboard": sys.argv[1], "template": sys.argv[2]}}
 
-	print("* Waiting: " + str(cfg['general']['interval']))
+	if cfg['general']['debug'] == 'true':
+		log.debug("Healthstone waiting interval: " + str(cfg['general']['interval']))
 	time.sleep(int(cfg['general']['interval']))
