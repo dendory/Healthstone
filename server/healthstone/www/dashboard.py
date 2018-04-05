@@ -44,10 +44,10 @@ else:
 
 if query.getvalue("ac"): # Login from form
 	if query.getvalue("ac") == cfg['AdminAccessCode']:
-		print("Set-Cookie: ac=" + sha256(cfg['AdminAccessCode']))
+		print("Set-Cookie: ac={}".format(sha256(cfg['AdminAccessCode'])))
 		login = 2
 	elif query.getvalue("ac") == cfg['AccessCode']:
-		print("Set-Cookie: ac=" + sha256(cfg['AccessCode']))
+		print("Set-Cookie: ac={}".format(sha256(cfg['AccessCode'])))
 		login = 1
 if 'HTTP_COOKIE' in os.environ: # Login from cookies
 	cookies = os.environ['HTTP_COOKIE']
@@ -95,20 +95,20 @@ except:
 def notify(title, text):
 	if cfg['NotifyPushbullet']: # Pushbullet notification
 		post_params = {
-			'type': 'note',
-			'title': 'Healthstone checks: ' + title,
+			'type': "note",
+			'title': "Healthstone checks: {}".format(title),
 			'body': text
 		}
 		post_args = urllib.parse.urlencode(post_params)
 		data = post_args.encode()
-		request = urllib.request.Request(url='https://api.pushbullet.com/v2/pushes', headers={'Authorization': 'Bearer ' + cfg['NotifyPushbullet']}, data=data)
+		request = urllib.request.Request(url="https://api.pushbullet.com/v2/pushes", headers={'Authorization': "Bearer {}".format(cfg['NotifyPushbullet'])}, data=data)
 		result = urllib.request.urlopen(request)
 	if cfg['NotifyNodePointURL']: # NodePoint notification
-		data = "api=add_ticket&key=" + cfg['NotifyNodePointKey'] + "&product_id=" + cfg['NotifyNodePointProduct'] + "&release_id=" + cfg['NotifyNodePointRelease'] + "&title=" + urllib.parse.quote("Healthstone checks: " + title, '') + "&description=" + urllib.parse.quote(text, '')
-		result = urllib.request.urlopen(cfg['NotifyNodePointURL'] + "/?" + data)
+		data = "api=add_ticket&key={}&product_id={}&release_id={}&title={}&description={}".format(cfg['NotifyNodePointKey'], cfg['NotifyNodePointProduct'], cfg['NotifyNodePointRelease'], urllib.parse.quote("Healthstone checks: {}".format(title), ''), urllib.parse.quote(text, ''))
+		result = urllib.request.urlopen("{}/?{}".format(cfg['NotifyNodePointURL'], data))
 	if cfg['NotifySMTPServer']: # Email notification
 		msg = MIMEText(text.replace('&gt;','>'))
-		msg['Subject'] = 'Healthstone checks: ' + title
+		msg['Subject'] = "Healthstone checks: {}".format(title)
 		msg['From'] = cfg['NotifySMTPFrom']
 		msg['To'] = cfg['NotifySMTPTo']
 		s = smtplib.SMTP(cfg['NotifySMTPServer'])
@@ -117,9 +117,9 @@ def notify(title, text):
 	if cfg['NotifySNSTopic']: # SNS notification
 		import boto3
 		sns = boto3.client('sns', aws_access_key_id=cfg['NotifySNSAccessKey'], aws_secret_access_key=cfg['NotifySNSAccessSecret'], region_name=cfg['NotifySNSRegion'])
-		sns.publish(TopicArn=cfg['NotifySNSTopic'], Subject='Healthstone checks: ' + title, Message=text)
+		sns.publish(TopicArn=cfg['NotifySNSTopic'], Subject="Healthstone checks: {}".format(title), Message=text)
 	if cfg['NotifyScript']: # Run command line
-		result = os.popen(cfg['NotifyScript'] + " \"" + text + "\"").read()
+		result = os.popen("{} \"{}\"".format(cfg['NotifyScript'], text)).read()
 
 #
 # Update list of lost contacts
@@ -134,7 +134,7 @@ for row in rows:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
 		if cfg['NotifyOnLostContact']:
-			notify("Lost contact with " + row[1], "Last contact: " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6])))
+			notify("Lost contact with {}".format(row[1]), "Last contact: {}".format(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6]))))
 if cfg['DeleteOldEntries']:
 	execDB("DELETE FROM log WHERE time < ?", [now - 604800])
 
@@ -178,7 +178,7 @@ if 'REQUEST_METHOD' not in os.environ:
 			except Exception as e:
 				result = "Probe request failed:\n\n{}".format(e)
 				response = 1
-		print(row[0] + ": " + str(response))
+		print("{}: {}".format(row[0], response))
 		found = False
 		rows2 = queryDB("SELECT * FROM systems WHERE name = ?", [row[0]])
 		for row2 in rows2:
@@ -216,9 +216,9 @@ if query.getvalue("output") and query.getvalue("name"):
 		if row[4] == 0 and alarm == 1:
 			execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [2, row[1], cgi.escape(query.getvalue("output")), now])
 			if cfg['NotifyOnAlarms']:
-				notify("Alarms raised on " + row[1], cgi.escape(query.getvalue("output")))
+				notify("Alarms raised on {}".format(row[1]), cgi.escape(query.getvalue("output")))
 			if cfg['NotifyOnIPChange'] and os.environ["REMOTE_ADDR"] != row[0]:
-				notify("IP changed on " + row[1], "The IP address changed on " + row[1] + "\nOld: " + row[0] + "\nNew: " + os.environ["REMOTE_ADDR"])
+				notify("IP changed on {}".format(row[1]), "The IP address changed on {}\nOld: {}\nNew: {}".format(row[1], row[0], os.environ["REMOTE_ADDR"]))
 		found = True
 	if found:
 		execDB("UPDATE systems SET cpu = ?, interval = ?, alarm = ?, output = ?, time = ?, ip = ? WHERE name = ?", [cpu, interval, alarm, cgi.escape(query.getvalue("output")), now, os.environ["REMOTE_ADDR"], cgi.escape(query.getvalue("name"))])
@@ -348,48 +348,48 @@ elif query.getvalue("settings"): # Settings page
 				print("<p><table class='table table-striped' id='probes'><thead><tr><th>Name</th><th>IP</th><th>Type</th></thead><tbody>")
 				rows = queryDB("SELECT * FROM probes ORDER BY name", [])
 				for row in rows:
-					print("<tr><td>" + row[0] + "</td><td>" + row[1] + "</td><td>" + str(row[2]) + "<a style='float:right' href=\"./?settings=3&probe-ip=" + cgi.escape(row[1]) + "&probe-type=" + str(row[2]) + "\"><font color='red'><b>X</b></font></a></td></tr>")
+					print("<tr><td>{}</td><td>{}</td><td>{}<a style='float:right' href=\"./?settings=3&probe-ip={}&probe-type={}\"><font color='red'><b>X</b></font></a></td></tr>".format(row[0], row[1], row[2], cgi.escape(row[1]), row[2]))
 				print("</tbody></table></p>")
 				print("<script>$(document).ready(function(){$('#probes').DataTable({'order':[[1,'asc']]});});</script>")
 		elif "##SETTINGS##" in line:
 			if login == 2:
 				print("<hr><h3>Settings</h3><form method='POST' action='.'><input type='hidden' name='settings' value='4'>")
 				print("<h4>Access codes to access the dashboard and change settings [string]</h4>")
-				print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"" + str(cfg['AccessCode']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>AdminAccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AdminAccessCode' value=\"" + str(cfg['AdminAccessCode']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>AccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AccessCode' value=\"{}\"></div></div>".format(cfg['AccessCode']))
+				print("<div class='row'><div class='col-sm-3'>AdminAccessCode</div><div class='col-sm-5'><input class='form-control' type='text' name='AdminAccessCode' value=\"{}\"></div></div>".format(cfg['AdminAccessCode']))
 				print("<h4>Delete log entries after a week [True|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>DeleteOldEntries</div><div class='col-sm-5'><input class='form-control' type='text' name='DeleteOldEntries' value=\"" + str(cfg['DeleteOldEntries']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>DeleteOldEntries</div><div class='col-sm-5'><input class='form-control' type='text' name='DeleteOldEntries' value=\"{}\"></div></div>".format(cfg['DeleteOldEntries']))
 				print("<h4>Dashboard theme and table style [True|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"" + str(cfg['DarkTheme']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>SearchableDashboard</div><div class='col-sm-5'><input class='form-control' type='text' name='SearchableDashboard' value=\"" + str(cfg['SearchableDashboard']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>DarkTheme</div><div class='col-sm-5'><input class='form-control' type='text' name='DarkTheme' value=\"{}\"></div></div>".format(cfg['DarkTheme']))
+				print("<div class='row'><div class='col-sm-3'>SearchableDashboard</div><div class='col-sm-5'><input class='form-control' type='text' name='SearchableDashboard' value=\"{}\"></div></div>".format(cfg['SearchableDashboard']))
 				print("<h4>Send notifications for systems that lose contact, raise alarms, or change IP [True|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"" + str(cfg['NotifyOnLostContact']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"" + str(cfg['NotifyOnAlarms']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifyOnIPChange</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnIPChange' value=\"" + str(cfg['NotifyOnIPChange']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"{}\"></div></div>".format(cfg['NotifyOnLostContact']))
+				print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"{}\"></div></div>".format(cfg['NotifyOnAlarms']))
+				print("<div class='row'><div class='col-sm-3'>NotifyOnIPChange</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnIPChange' value=\"{}\"></div></div>".format(cfg['NotifyOnIPChange']))
 				print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"" + str(cfg['NotifyPushbullet']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"{}\"></div></div>".format(cfg['NotifyPushbullet']))
 				print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>NotifyNodePointURL</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointURL' value=\"" + str(cfg['NotifyNodePointURL']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifyNodePointKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointKey' value=\"" + str(cfg['NotifyNodePointKey']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifyNodePointProduct</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointProduct' value=\"" + str(cfg['NotifyNodePointProduct']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifyNodePointRelease</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointRelease' value=\"" + str(cfg['NotifyNodePointRelease']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>NotifyNodePointURL</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointURL' value=\"{}\"></div></div>".format(cfg['NotifyNodePointURL']))
+				print("<div class='row'><div class='col-sm-3'>NotifyNodePointKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointKey' value=\"{}\"></div></div>".format(cfg['NotifyNodePointKey']))
+				print("<div class='row'><div class='col-sm-3'>NotifyNodePointProduct</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointProduct' value=\"{}\"></div></div>".format(cfg['NotifyNodePointProduct']))
+				print("<div class='row'><div class='col-sm-3'>NotifyNodePointRelease</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyNodePointRelease' value=\"{}\"></div></div>".format(cfg['NotifyNodePointRelease']))
 				print("<h4>Send an email notification using this SMTP server, To address, and From address [smtp server|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>NotifySMTPServer</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPServer' value=\"" + str(cfg['NotifySMTPServer']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifySMTPTo</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPTo' value=\"" + str(cfg['NotifySMTPTo']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifySMTPFrom</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPFrom' value=\"" + str(cfg['NotifySMTPFrom']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>NotifySMTPServer</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPServer' value=\"{}\"></div></div>".format(cfg['NotifySMTPServer']))
+				print("<div class='row'><div class='col-sm-3'>NotifySMTPTo</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPTo' value=\"{}\"></div></div>".format(cfg['NotifySMTPTo']))
+				print("<div class='row'><div class='col-sm-3'>NotifySMTPFrom</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySMTPFrom' value=\"{}\"></div></div>".format(cfg['NotifySMTPFrom']))
 				print("<h4>Send an AWS SNS notification. Requires an API key and the 'boto3' Python library to be installed [topic arn|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>NotifySNSTopic</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSTopic' value=\"" + str(cfg['NotifySNSTopic']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"" + str(cfg['NotifySNSAccessKey']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"" + str(cfg['NotifySNSAccessSecret']) + "\"></div></div>")
-				print("<div class='row'><div class='col-sm-3'>NotifySNSRegion</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSRegion' value=\"" + str(cfg['NotifySNSRegion']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>NotifySNSTopic</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSTopic' value=\"{}\"></div></div>".format(cfg['NotifySNSTopic']))
+				print("<div class='row'><div class='col-sm-3'>NotifySNSAccessKey</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessKey' value=\"{}\"></div></div>".format(cfg['NotifySNSAccessKey']))
+				print("<div class='row'><div class='col-sm-3'>NotifySNSAccessSecret</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSAccessSecret' value=\"{}\"></div></div>".format(cfg['NotifySNSAccessSecret']))
+				print("<div class='row'><div class='col-sm-3'>NotifySNSRegion</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifySNSRegion' value=\"{}\"></div></div>".format(cfg['NotifySNSRegion']))
 				print("<h4>Run a custom script or application [Command line|False]</h4>")
-				print("<div class='row'><div class='col-sm-3'>NotifyScript</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyScript' value=\"" + str(cfg['NotifyScript']) + "\"></div></div>")
+				print("<div class='row'><div class='col-sm-3'>NotifyScript</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyScript' value=\"{}\"></div></div>".format(cfg['NotifyScript']))
 				print("<p><input type='submit' class='btn btn-primary' value='Save settings'></form></p>")
 		elif "##TEMPLATES##" in line:
 			if login == 2:
 				print("<h4>Available templates:</h4><ol>")
 				for filename in os.listdir(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "templates")):
-					print("<li>" + str(filename).replace(".template", "") + "</li>")
+					print("<li>{}</li>".format(str(filename).replace(".template", "")))
 				print("</ol>")
 		else:
 			print(line)
