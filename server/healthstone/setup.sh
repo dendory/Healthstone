@@ -31,7 +31,8 @@ cp -r $DIR $installdir
 
 # Fix permissions
 echo "* Setting permissions..."
-chown -R $wwwuser.$wwwuser $installdir/healthstone
+chown -R $wwwuser.$wwwuser $installdir/healthstone/db
+chmod g+s $installdir/healthstone/db
 chmod 755 $installdir/healthstone/www/dashboard.py
 
 # Add crontab for probes
@@ -45,7 +46,7 @@ rm -f /tmp/mycron
 
 # Add Apache config
 echo "* Adding Apache config..."
-ln -s $installdir/healthstone/www $wwwroot/healthstone/db
+ln -s $installdir/healthstone/www $wwwroot/healthstone
 sed -i.bak '/AllowOverride None/d' $conf
 echo "<Directory />" >> $conf
 echo " AllowOverride All" >> $conf
