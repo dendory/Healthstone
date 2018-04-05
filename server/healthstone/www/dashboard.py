@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.4"
+VERSION = "2.1.5"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None
@@ -150,6 +150,22 @@ if 'REQUEST_METHOD' not in os.environ:
 			response = os.system("ping -c 1 -w2 {} > {} 2>&1".format(row[1], dummyfile))
 			with open(dummyfile, 'r') as fd:
 				result = "ICMP ping reply:\n\n{}".format(fd.read())
+		elif row[2] == 161: # SNMP check
+			from easysnmp import snmp_walk
+			try:
+				url = row[1]
+				community = "public"
+				if "/" in row[1]:
+					url = row[1].split('/')[0]
+					community = row[1].split('/')[1]
+				data = snmp_walk("system", hostname=url, community=community, version=1)
+				result = "SNMP walk reply:\n\n"
+				for item in data:
+					result += "{}.{}: {}\n".format(item.oid, item.oid_index, item.value)
+				response = 0
+			except Exception as e:
+				result = "SNMP request failed:\n\n{}".format(e)
+				response = 1
 		elif row[2] == 80 or row[2] == 443: # HTTP check
 			try:
 				if row[1][:4] != 'http':
@@ -182,9 +198,9 @@ if 'REQUEST_METHOD' not in os.environ:
 		found = False
 		rows2 = queryDB("SELECT * FROM systems WHERE name = ?", [row[0]])
 		for row2 in rows2:
-			if response == 0:
+			if response == 0: # Success
 				execDB("UPDATE systems SET cpu = -1, interval = 60, alarm = 0, output = ?, time = ?, ip = ? WHERE name = ?", [result, now, row[1], row[0]])
-			else:
+			else: # Failure
 				execDB("UPDATE systems SET cpu = -1, interval = 60, alarm = 0, output = ?, ip = ? WHERE name = ?", [result, row[1], row[0]])
 			found = True
 		if not found:
@@ -344,7 +360,7 @@ elif query.getvalue("settings"): # Settings page
 	for line in f:
 		if "##PROBES##" in line:
 			if login == 2:
-				print("<p><h4>Add a new probe:</h4><div class='row'><form method='POST' action='./'><input type='hidden' name='settings' value='2'><div class='col-sm-3'><input type='text' name='probe-name' placeholder='Name' class='form-control' required></div><div class='col-sm-3'><input type='text' name='probe-ip' placeholder='IP address' class='form-control' required></div><div class='col-sm-3'><select name='probe-type' class='form-control'><option value=0>ICMP</option><option value=80>HTTP</option><option value=443>HTTPS</option><option value=22>SSH</option><option value=3389>RDP</option></select></div><div class='col-sm-3'><input type='submit' value='Add' class='form-control btn btn-primary'></form></div></div></p>")
+				print("<p><h4>Add a new probe:</h4><div class='row'><form method='POST' action='./'><input type='hidden' name='settings' value='2'><div class='col-sm-3'><input type='text' name='probe-name' placeholder='Name' class='form-control' required></div><div class='col-sm-3'><input type='text' name='probe-ip' placeholder='IP address' class='form-control' required></div><div class='col-sm-3'><select name='probe-type' class='form-control'><option value=0>ICMP</option><option value=80>HTTP</option><option value=443>HTTPS</option><option value=22>SSH</option><option value=3389>RDP</option><option value=161>SNMP</option></select></div><div class='col-sm-3'><input type='submit' value='Add' class='form-control btn btn-primary'></form></div></div></p>")
 				print("<p><table class='table table-striped' id='probes'><thead><tr><th>Name</th><th>IP</th><th>Type</th></thead><tbody>")
 				rows = queryDB("SELECT * FROM probes ORDER BY name", [])
 				for row in rows:

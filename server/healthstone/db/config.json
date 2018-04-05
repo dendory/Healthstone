@@ -1,5 +1,5 @@
 {
-	"AccessCode": "1234",
+	"AccessCode": "5678",
 	"AdminAccessCode": "1234",
 	"DeleteOldEntries": false,
 	"DarkTheme": false,
@@ -19,5 +19,5 @@
 	"NotifySNSTopic": false,
 	"NotifySNSAccessKey": "",
 	"NotifySNSAccessSecret": "",
-	"NotifySNSRegion": ""
+	"NotifySNSRegion": ""	
 }
