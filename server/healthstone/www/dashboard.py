@@ -24,6 +24,7 @@ now = int(time.time())
 login = None
 cfgfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "config.json")
 dbfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "dashboard.db")
+dummyfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "dummy")
 with open(cfgfile, 'r') as fd:
 	data = fd.read()
 	cfg = json.loads(data)
@@ -144,8 +145,29 @@ if 'REQUEST_METHOD' not in os.environ:
 	print("Checking probes...")
 	rows = queryDB("SELECT * FROM probes", [])
 	for row in rows:
+		result = "Probe request succeeded."
 		if row[2] == 0: # ICMP check
-			response = os.system("ping -c 1 -w2 " + row[1] + " > /dev/null")
+			response = os.system("ping -c 1 -w2 {} > {} 2>&1".format(row[1], dummyfile))
+			with open(dummyfile, 'r') as fd:
+				result = "ICMP ping reply:\n\n{}".format(fd.read())
+		elif row[2] == 80 or row[2] == 443: # HTTP check
+			try:
+				if row[1][:4] != 'http':
+					if row[2] == 80:
+						url = "http://{}/".format(row[1])
+					else:
+						url = "https://{}/".format(row[1])
+				else:
+					url = row[1]
+				response =  urllib.request.urlopen(url)
+				result = "HTTP status code:\n\n{}".format(response.getcode())
+				if response.getcode() == 200:
+					response = 0
+				else:
+					response = 1
+			except Exception as e:
+				result = "HTTP request failed:\n\n{}".format(e)
+				response = 1
 		else: # TCP check
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			s.settimeout(2)
@@ -153,17 +175,21 @@ if 'REQUEST_METHOD' not in os.environ:
 				s.connect((row[1], row[2]))
 				s.close()
 				response = 0
-			except:
+			except Exception as e:
+				result = "Probe request failed:\n\n{}".format(e)
 				response = 1
 		print(row[0] + ": " + str(response))
+		found = False
+		rows2 = queryDB("SELECT * FROM systems WHERE name = ?", [row[0]])
+		for row2 in rows2:
+			if response == 0:
+				execDB("UPDATE systems SET cpu = -1, interval = 60, alarm = 0, output = ?, time = ?, ip = ? WHERE name = ?", [result, now, row[1], row[0]])
+			else:
+				execDB("UPDATE systems SET cpu = -1, interval = 60, alarm = 0, output = ?, ip = ? WHERE name = ?", [result, row[1], row[0]])
+			found = True
+		if not found:
+			execDB("INSERT INTO systems VALUES(?, ?, -1, 60, 0, ?, ?)", [row[1], row[0], result, now])
 		if response == 0:
-			found = False
-			rows2 = queryDB("SELECT * FROM systems WHERE name = ?", [row[0]])
-			for row2 in rows2:
-				execDB("UPDATE systems SET cpu = -1, interval = 60, alarm = 0, output = 'Probe', time = ?, ip = ? WHERE name = ?", [now, row[1], row[0]])
-				found = True
-			if not found:
-				execDB("INSERT INTO systems VALUES(?, ?, -1, 60, 0, 'Probe', ?)", [row[1], row[0], now])
 			rows2 = queryDB("SELECT * FROM lostcontact WHERE name = ?", [row[0]])
 			for row2 in rows2:
 				execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, row[0], "Contact restored with host.", now])
@@ -287,7 +313,7 @@ elif query.getvalue("settings"): # Settings page
 	if query.getvalue("settings") == "2" and login == 2: # Add new probe
 		try:
 			execDB("INSERT INTO probes VALUES (?, ?, ?)", [cgi.escape(query.getvalue("probe-name")).replace('"', "'"), cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), int(query.getvalue("probe-type"))])
-			execDB("INSERT INTO systems VALUES(?, ?, -1, 60, 0, 'Probe', ?)", [cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), cgi.escape(query.getvalue("probe-name")).replace('"', "'"), now])
+			execDB("INSERT INTO systems VALUES(?, ?, -1, 60, 0, \"Attempting to probe host...\", ?)", [cgi.escape(query.getvalue("probe-ip")).replace('"', "'"), cgi.escape(query.getvalue("probe-name")).replace('"', "'"), now])
 			print("<p><center><b>Probe successfully added.</b></center></p>")
 		except:
 			print("<p><center><b>Could not add probe to the database.</b></center></p>")

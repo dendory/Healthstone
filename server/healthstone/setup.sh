@@ -11,7 +11,7 @@ if [ ! -f /usr/bin/python3 ]; then
 	exit 1
 fi
 
-echo "This script will copy Healthstone files, set permissions, add crontab and Apache configuration options. Press ENTER to continue or CTRL-C to cancel."
+echo "This script will copy Healthstone files, set permissions, add crontab and Apache configuration options. Press CTRL-C to cancel."
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Get default values
@@ -45,7 +45,7 @@ rm -f /tmp/mycron
 
 # Add Apache config
 echo "* Adding Apache config..."
-ln -s $installdir/healthstone/www $wwwroot/healthstone
+ln -s $installdir/healthstone/www $wwwroot/healthstone/db
 sed -i.bak '/AllowOverride None/d' $conf
 echo "<Directory />" >> $conf
 echo " AllowOverride All" >> $conf
