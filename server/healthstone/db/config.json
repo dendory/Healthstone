@@ -3,6 +3,7 @@
 	"AdminAccessCode": "1234",
 	"DeleteOldEntries": false,
 	"DarkTheme": false,
+	"VoiceAlert": false,
 	"SearchableDashboard": true,
 	"NotifyOnLostContact": true,
 	"NotifyOnAlarms": true,

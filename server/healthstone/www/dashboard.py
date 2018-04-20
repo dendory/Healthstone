@@ -18,13 +18,14 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.5"
+VERSION = "2.1.6"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None
 cfgfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "config.json")
 dbfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "dashboard.db")
 dummyfile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "dummy")
+voicefile = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "db", "voicefile")
 with open(cfgfile, 'r') as fd:
 	data = fd.read()
 	cfg = json.loads(data)
@@ -120,6 +121,14 @@ def notify(title, text):
 		sns.publish(TopicArn=cfg['NotifySNSTopic'], Subject="Healthstone checks: {}".format(title), Message=text)
 	if cfg['NotifyScript']: # Run command line
 		result = os.popen("{} \"{}\"".format(cfg['NotifyScript'], text)).read()
+	if cfg['VoiceAlert']: # Voice alerts
+		with open(voicefile, 'w') as fd:
+			if "Lost contact" in title:
+				fd.write("lostcontact.mp3")
+			elif "Alarms raised" in title:
+				fd.write("alarms.mp3")
+			elif "IP changed" in title:
+				fd.write("ipchanged.mp3")
 
 #
 # Update list of lost contacts
@@ -382,6 +391,8 @@ elif query.getvalue("settings"): # Settings page
 				print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"{}\"></div></div>".format(cfg['NotifyOnLostContact']))
 				print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"{}\"></div></div>".format(cfg['NotifyOnAlarms']))
 				print("<div class='row'><div class='col-sm-3'>NotifyOnIPChange</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnIPChange' value=\"{}\"></div></div>".format(cfg['NotifyOnIPChange']))
+				print("<h4>Provide voice alerts on the dashboard [True|False]</h4>")
+				print("<div class='row'><div class='col-sm-3'>VoiceAlert</div><div class='col-sm-5'><input class='form-control' type='text' name='VoiceAlert' value=\"{}\"></div></div>".format(cfg['VoiceAlert']))
 				print("<h4>Send a Pushbullet notification using this API key [API key|False]</h4>")
 				print("<div class='row'><div class='col-sm-3'>NotifyPushbullet</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyPushbullet' value=\"{}\"></div></div>".format(cfg['NotifyPushbullet']))
 				print("<h4>Create a NodePoint ticket using this URL, API key, product and release numbers [url|False]</h4>")
@@ -522,6 +533,13 @@ else: # Main dashboard
 		print("</div></a>")
 		if os.name != 'nt':
 			print("<br><center>" + os.popen("uptime").read().replace('\n','<br>') + "</center>")
+		if cfg['VoiceAlert']:
+			with open(voicefile, 'r') as fd:
+				audiofile = fd.read()
+			if ".mp3" in audiofile:
+				print("<center><audio controls autoplay><source src='audio/{}' type='audio/mpeg'></audio></center>".format(audiofile))
+				with open(voicefile, 'w') as fd:
+					fd.write("voicefile")
 
 f = open("bottom.html", "r")
 for line in f:
