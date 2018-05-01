@@ -1,5 +1,5 @@
 //
-// Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - http://healthstone.ca
+// Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - https://dendory.net
 //
 
 using System;

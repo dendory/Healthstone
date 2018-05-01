@@ -12,7 +12,7 @@ The server component runs the dashboard against which Healthstone clients can re
 Apache installed, or a Windows server with IIS (with the CGI and ISAP features) and Python 3.x installed. The dashboard also has the ability to
 use probes for hosts that you want to monitor without agents. Probes are checked on a schedule every 1 minute.
 
-https://healthstone.ca
+https://dendory.net/healthstone
 
 
 Installation procedure
@@ -91,7 +91,7 @@ lodctr /r.
 
 * Why is the Linux agent not running/stopped unexpectingly?
 
-Check the log at /var/log/healthstone.log for hints as to why it stopped. Try to run the agent manually. The agent is set to run automatically on 
+Check the log at /var/log/messages for hints as to why it stopped. Try to run the agent manually. The agent is set to run automatically on 
 boot from /etc/rc.local.
 
 * Agents are not reporting any check or losing contact after a template change?

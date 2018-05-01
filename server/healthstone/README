@@ -12,7 +12,7 @@ The server component runs the dashboard against which Healthstone clients can re
 Apache installed, or a Windows server with IIS (with the CGI and ISAP features) and Python 3.x installed. The dashboard also has the ability to
 use probes for hosts that you want to monitor without agents. Probes are checked on a schedule every 1 minute.
 
-https://healthstone.ca
+https://dendory.net/healthstone
 
 
 Installation procedure
