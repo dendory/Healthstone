@@ -138,12 +138,20 @@ rows = queryDB("SELECT name FROM lostcontact", [])
 for row in rows:
 	lostcontact.append(row[0])
 rows = queryDB("SELECT * FROM systems", [])
+notify_list = ""
+notify_list2 = ""
 for row in rows:
 	if (row[6] + row[3] * 2 + 15) < time.time() and row[1] not in lostcontact:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
-		if cfg['NotifyOnLostContact']:
-			notify("Lost contact with {}".format(row[1]), "Last contact: {}".format(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(row[6]))))
+		if notify_list == "":
+			notify_list = "{}".format(row[1])
+			notify_list2 = "{} ({})\n".format(row[1], row[0])
+		else:
+			notify_list = "{}, {}".format(notify_list, row[1])
+			notify_list2 = "{}{} ({})\n".format(notify_list2, row[1], row[0])
+if cfg['NotifyOnLostContact'] and notify_list != "":
+	notify("Lost contact with {}".format(notify_list), "Healthstone has lost contact with the following system(s):\n\n{}".format(notify_list2))
 if cfg['DeleteOldEntries']:
 	execDB("DELETE FROM log WHERE time < ?", [now - 604800])
 
@@ -160,8 +168,8 @@ if 'REQUEST_METHOD' not in os.environ:
 			with open(dummyfile, 'r') as fd:
 				result = "ICMP ping reply:\n\n{}".format(fd.read())
 		elif row[2] == 161: # SNMP check
-			from easysnmp import snmp_walk
 			try:
+				from easysnmp import snmp_walk
 				url = row[1]
 				community = "public"
 				if "/" in row[1]:
@@ -506,7 +514,7 @@ else: # Main dashboard
 			print("</form></td></tr>")	
 		print("</tbody></table>")
 		if cfg['SearchableDashboard']:
-			print("<script>$(document).ready(function(){$('#systems').DataTable({'order':[[4,'desc']]});});</script>")	
+			print("<script>$(document).ready(function(){$('#systems').DataTable({'iDisplayLength': 100, 'order':[[4,'desc']]});});</script>")	
 
 		# Small screens
 		print("</div><div class='visible-xs hidden-sm hidden-md hidden-lg'>")
