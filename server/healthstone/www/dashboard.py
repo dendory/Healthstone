@@ -139,19 +139,19 @@ for row in rows:
 	lostcontact.append(row[0])
 rows = queryDB("SELECT * FROM systems", [])
 notify_list = ""
-notify_list2 = ""
+notify_text = ""
 for row in rows:
 	if (row[6] + row[3] * 2 + 15) < time.time() and row[1] not in lostcontact:
 		execDB("INSERT INTO lostcontact VALUES (?)", [row[1]])
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [1, row[1], "Lost contact with host.", now])
 		if notify_list == "":
 			notify_list = "{}".format(row[1])
-			notify_list2 = "{} ({})\n".format(row[1], row[0])
+			notify_text = "{} ({})\n".format(row[1], row[0])
 		else:
 			notify_list = "{}, {}".format(notify_list, row[1])
-			notify_list2 = "{}{} ({})\n".format(notify_list2, row[1], row[0])
+			notify_text = "{}{} ({})\n".format(notify_text, row[1], row[0])
 if cfg['NotifyOnLostContact'] and notify_list != "":
-	notify("Lost contact with {}".format(notify_list), "Healthstone has lost contact with the following system(s):\n\n{}".format(notify_list2))
+	notify("Lost contact with {}".format(notify_list), "Healthstone has lost contact with the following system(s):\n\n{}".format(notify_text))
 if cfg['DeleteOldEntries']:
 	execDB("DELETE FROM log WHERE time < ?", [now - 604800])
 
@@ -159,6 +159,8 @@ if cfg['DeleteOldEntries']:
 # If run from command line, only check probes
 #
 if 'REQUEST_METHOD' not in os.environ:
+	notify_list = ""
+	notify_text = ""
 	print("Checking probes...")
 	rows = queryDB("SELECT * FROM probes", [])
 	for row in rows:
@@ -226,9 +228,15 @@ if 'REQUEST_METHOD' not in os.environ:
 			rows2 = queryDB("SELECT * FROM lostcontact WHERE name = ?", [row[0]])
 			for row2 in rows2:
 				execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, row[0], "Contact restored with host.", now])
-				if cfg['NotifyOnRestoredContact']:
-					notify("Contact restored with {}".format(row[0]), "Contact has been restored with the host.")
+				if notify_list == "":
+					notify_list = "{}".format(row[0])
+					notify_text = "{}\n".format(row[0])
+				else:
+					notify_list = "{}, {}".format(notify_list, row[0])
+					notify_text = "{}{}\n".format(notify_text, row[0])
 			execDB("DELETE FROM lostcontact WHERE name = ?", [row[0]])
+	if cfg['NotifyOnRestoredContact'] and notify_list != "":
+		notify("Contact restored with {}".format(row[0]), "Healthstone has restored contact with the following system(s):\n\n{}".format(notify_text))
 	quit(0)
 
 #
