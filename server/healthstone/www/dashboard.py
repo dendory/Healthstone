@@ -226,6 +226,8 @@ if 'REQUEST_METHOD' not in os.environ:
 			rows2 = queryDB("SELECT * FROM lostcontact WHERE name = ?", [row[0]])
 			for row2 in rows2:
 				execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, row[0], "Contact restored with host.", now])
+				if cfg['NotifyOnRestoredContact']:
+					notify("Contact restored with {}".format(row[0]), "Contact has been restored with the host.")
 			execDB("DELETE FROM lostcontact WHERE name = ?", [row[0]])
 	quit(0)
 
@@ -263,6 +265,8 @@ if query.getvalue("output") and query.getvalue("name"):
 	rows = queryDB("SELECT * FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	for row in rows:
 		execDB("INSERT INTO log VALUES (?, ?, ?, ?)", [0, cgi.escape(query.getvalue("name")), "Contact restored with host.", now])		
+		if cfg['NotifyOnRestoredContact']:
+			notify("Contact restored with {}".format(row[0]), "Contact has been restored with the host.")
 	execDB("DELETE FROM lostcontact WHERE name = ?", [cgi.escape(query.getvalue("name"))])
 	if query.getvalue("template"):
 		try:
@@ -397,6 +401,7 @@ elif query.getvalue("settings"): # Settings page
 				print("<div class='row'><div class='col-sm-3'>SearchableDashboard</div><div class='col-sm-5'><input class='form-control' type='text' name='SearchableDashboard' value=\"{}\"></div></div>".format(cfg['SearchableDashboard']))
 				print("<h4>Send notifications for systems that lose contact, raise alarms, or change IP [True|False]</h4>")
 				print("<div class='row'><div class='col-sm-3'>NotifyOnLostContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnLostContact' value=\"{}\"></div></div>".format(cfg['NotifyOnLostContact']))
+				print("<div class='row'><div class='col-sm-3'>NotifyOnRestoredContact</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnRestoredContact' value=\"{}\"></div></div>".format(cfg['NotifyOnRestoredContact']))
 				print("<div class='row'><div class='col-sm-3'>NotifyOnAlarms</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnAlarms' value=\"{}\"></div></div>".format(cfg['NotifyOnAlarms']))
 				print("<div class='row'><div class='col-sm-3'>NotifyOnIPChange</div><div class='col-sm-5'><input class='form-control' type='text' name='NotifyOnIPChange' value=\"{}\"></div></div>".format(cfg['NotifyOnIPChange']))
 				print("<h4>Provide voice alerts on the dashboard [True|False]</h4>")
