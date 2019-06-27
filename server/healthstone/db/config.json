@@ -6,6 +6,7 @@
 	"VoiceAlert": false,
 	"SearchableDashboard": true,
 	"NotifyOnLostContact": true,
+	"NotifyOnRestoredContact": true,
 	"NotifyOnAlarms": true,
 	"NotifyOnIPChange": false,
 	"NotifyPushbullet": false,
