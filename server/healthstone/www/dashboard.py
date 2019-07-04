@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.6"
+VERSION = "2.1.7"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None
