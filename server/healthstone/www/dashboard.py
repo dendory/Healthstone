@@ -236,7 +236,7 @@ if 'REQUEST_METHOD' not in os.environ:
 					notify_text = "{}{}\n".format(notify_text, row[0])
 			execDB("DELETE FROM lostcontact WHERE name = ?", [row[0]])
 	if cfg['NotifyOnRestoredContact'] and notify_list != "":
-		notify("Contact restored with {}".format(row[0]), "Healthstone has restored contact with the following system(s):\n\n{}".format(notify_text))
+		notify("Contact restored with {}".format(notif_list), "Healthstone has restored contact with the following system(s):\n\n{}".format(notify_text))
 	quit(0)
 
 #
