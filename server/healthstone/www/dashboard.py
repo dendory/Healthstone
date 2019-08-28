@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2015-2019 Patrick Lambert - http://healthstone.ca
 
 import sys
 import os
@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.7"
+VERSION = "2.1.8"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None
@@ -187,6 +187,7 @@ if 'REQUEST_METHOD' not in os.environ:
 				response = 1
 		elif row[2] == 80 or row[2] == 443: # HTTP check
 			try:
+				from socket import timeout
 				if row[1][:4] != 'http':
 					if row[2] == 80:
 						url = "http://{}/".format(row[1])
@@ -194,7 +195,7 @@ if 'REQUEST_METHOD' not in os.environ:
 						url = "https://{}/".format(row[1])
 				else:
 					url = row[1]
-				response =  urllib.request.urlopen(url)
+				response =  urllib.request.urlopen(url, timeout=5)
 				result = "HTTP status code:\n\n{}".format(response.getcode())
 				if response.getcode() == 200:
 					response = 0
