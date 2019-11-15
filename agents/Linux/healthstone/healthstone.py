@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015-2018 Patrick Lambert - https://dendory.net
+# Healthstone System Monitor - (C) 2015-2019 Patrick Lambert - https://dendory.net
 
 import logging
 import logging.handlers
@@ -90,6 +90,19 @@ while True:
 				except:
 					alarms += 1
 					output += "--> [CheckFirewall] Both firewalld and iptables are inactive.\n"
+		if "checkdocker" in cfg:
+			try:
+				docker = str(os.popen("docker container ps --format \"{{.ID}}: {{.Names}}\"").read().rstrip('\n'))
+				for container in cfg['checkdocker']['running'].split(' '):
+					if container != "" and container not in docker.lower():
+						alarms += 1
+						output += "--> [CheckDocker] Required container is missing: " + container + "\n"
+				if cfg['general']['verbose'] == 'true':
+					output += "[CheckDocker] Running containers: " + docker + "\n"
+			except:
+				a, b, c = sys.exc_info()
+				alarms += 1
+				output += "--> [CheckDocker] Error while fetching docker information: " + str(b) + "\n"
 		if "checkmemory" in cfg:
 			try:
 				freememory = float(os.popen("free | grep Mem | awk '{print ($2 - $3) / 1000}'").read().rstrip('\n'))

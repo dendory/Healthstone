@@ -45,3 +45,6 @@ domain: WORKGROUP		# Domain name the system must be joined to
 
 [CheckAV]
 require: Microsoft Security Essentials  # Require a specific AV product to be installed
+
+[CheckDocker]
+running:				# List of docker containers that must be running
