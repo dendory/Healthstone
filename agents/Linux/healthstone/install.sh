@@ -18,19 +18,12 @@ if [ -z "$template" ]; then
         read -p "Template name: " template
 fi
 
-cp healthstone.py /usr/bin/healthstone.py
+yes|cp healthstone.py /usr/bin/healthstone.py
 chmod +x /usr/bin/healthstone.py
-if ! grep -q healthstone /etc/rc.local; then
-		echo "if ! pgrep -f \"healthstone.py\" > /dev/null" >> /etc/rc.local
-		echo "then" >> /etc/rc.local
-        echo " /usr/bin/healthstone.py $dashboard $template &" >> /etc/rc.local
-		echo "fi" >> /etc/rc.local
-        chmod +x /etc/rc.local
-fi
-
-if [[ $(ps ax |grep healthstone |wc -l) -lt 1 ]]; then
-	echo "Starting Healthstone..."
-	/usr/bin/healthstone.py $dashboard $template > /var/log/healthstone.log 2>&1 &
-fi
+yes|cp ./healthstone.service /etc/systemd/system/healthstone.service
+sed -i "s,DASHBOARD,$dashboard,g" /etc/systemd/system/healthstone.service
+sed -i "s,TEMPLATE,$template,g" /etc/systemd/system/healthstone.service
+systemctl restart healthstone
+systemctl enable healthstone
 
 echo "Installation done. The agent will connect to $dashboard shortly to fetch its configuration."

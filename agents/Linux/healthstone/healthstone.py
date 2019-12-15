@@ -20,7 +20,7 @@ criterr = ""
 log = logging.getLogger("healthstone")
 handler = logging.handlers.SysLogHandler(address = '/dev/log')
 log.addHandler(handler)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 log.info("Healthstone System Monitor starting - Dashboard=" + cfg['general']['dashboard'] + ", Template=" + cfg['general']['template'])
 print("* Healthstone System Monitor starting - Dashboard=" + cfg['general']['dashboard'] + ", Template=" + cfg['general']['template'])
 
@@ -98,7 +98,7 @@ while True:
 						alarms += 1
 						output += "--> [CheckDocker] Required container is missing: " + container + "\n"
 				if cfg['general']['verbose'] == 'true':
-					output += "[CheckDocker] Running containers: " + docker + "\n"
+					output += "[CheckDocker] Running containers:\n" + docker + "\n"
 			except:
 				a, b, c = sys.exc_info()
 				alarms += 1
@@ -163,7 +163,7 @@ while True:
 					tmp = line.split(' ')
 					tmp2 = [x for x in tmp if x]
 					freespace = str(tmp2[3])
-					if freespace.isdigit() and "tmpfs" not in tmp2[0] and "mmcblk" not in tmp2[0] and "udev" not in tmp2[0] and (cfg['checkdiskspace']['onlysystemdisk'] != 'true' or tmp2[5] == '/'):
+					if freespace.isdigit() and "tmpfs" not in tmp2[0] and tmp2[0] != "shm" and "mmcblk" not in tmp2[0] and "udev" not in tmp2[0] and (cfg['checkdiskspace']['onlysystemdisk'] != 'true' or tmp2[5] == '/'):
 						freespace = int(int(freespace)/1000)
 						if int(freespace) < int(cfg['checkdiskspace']['minimum']):
 							alarms += 1

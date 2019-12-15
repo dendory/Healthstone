@@ -1,0 +1,12 @@
+
+[Unit]
+Description=Healthstone Monitoring System
+Wants=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/bin/healthstone.py DASHBOARD TEMPLATE
+
+[Install]
+WantedBy=multi-user.target
