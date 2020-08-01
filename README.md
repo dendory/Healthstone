@@ -19,7 +19,7 @@ Installation procedure
 ======================
 
 * Ensure the required software is installed (Python 3.x, along with Apache for Linux or IIS for Windows).
-* Download healthstone.zip onto your server and run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
+* Download [healthstone.zip](https://github.com/dendory/Healthstone/blob/master/healthstone.zip) onto your server and run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
 * Login at http://localhost/healthstone, then click on 'Settings' to configure settings and download the agent packages.
 
 The default access code is '1234'.
