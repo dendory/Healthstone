@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Healthstone System Monitor - (C) 2015-2019 Patrick Lambert - http://healthstone.ca
+# Healthstone System Monitor - (C) 2015-2019 Patrick Lambert - http://healthstone.info
 
 import sys
 import os

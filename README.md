@@ -12,14 +12,14 @@ The server component runs the dashboard against which Healthstone clients can re
 Apache installed, or a Windows server with IIS (with the CGI and ISAP features) and Python 3.x installed. The dashboard also has the ability to
 use probes for hosts that you want to monitor without agents. Probes are checked on a schedule every 1 minute.
 
-https://dendory.net/healthstone
+https://healthstone.info
 
 
 Installation procedure
 ======================
 
 * Ensure the required software is installed (Python 3.x, along with Apache for Linux or IIS for Windows).
-* Download [healthstone.zip](https://github.com/dendory/Healthstone/raw/master/healthstone.zip) onto your server and run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
+* Download [healthstone.zip](https://healthstone.info/healthstone.zip) onto your server and run setup.bat as a local administrator on Windows, or setup.sh as root on Linux.
 * Login at http://localhost/healthstone, then click on 'Settings' to configure settings and download the agent packages.
 
 The default access code is '1234'.
