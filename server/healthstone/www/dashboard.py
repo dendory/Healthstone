@@ -18,7 +18,7 @@ from email.mime.text import MIMEText
 #
 # Initialize
 #
-VERSION = "2.1.9"
+VERSION = "2.2.0"
 query = cgi.FieldStorage()
 now = int(time.time())
 login = None
@@ -37,7 +37,7 @@ def sha256(msg):
     return hashlib.sha256(str.encode(msg)).hexdigest()
 
 if query.getvalue("output") and query.getvalue("name"):
-	print("Content-Type: text/plain; charset=utf-8")	
+	print("Content-Type: text/plain; charset=utf-8")
 elif query.getvalue("api"):
 	print("Content-Type: application/javascript; charset=utf-8")
 else:
@@ -188,6 +188,8 @@ if 'REQUEST_METHOD' not in os.environ:
 		elif row[2] == 80 or row[2] == 443: # HTTP check
 			try:
 				from socket import timeout
+				import ssl
+				ssl._create_default_https_context = ssl._create_unverified_context
 				if row[1][:4] != 'http':
 					if row[2] == 80:
 						url = "http://{}/".format(row[1])
